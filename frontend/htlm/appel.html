@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Urgence+ - Appel d'urgence</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <div class="container page-container">
+    <header class="header">
+      <h1>Nouvel appel d'urgence</h1>
+      <p>Enregistrez les détails et dispatch l'intervention</p>
+    </header>
+
+    <section class="button-group">
+      <label class="section-label">Type d'incident</label>
+      <div class="buttons-grid" id="type-buttons">
+        <button type="button" class="option-button active" data-value="incendie">Incendie</button>
+        <button type="button" class="option-button" data-value="medical">Médical</button>
+        <button type="button" class="option-button" data-value="accident">Accident</button>
+        <button type="button" class="option-button" data-value="autre">Autre</button>
+      </div>
+    </section>
+
+    <section class="button-group">
+      <label class="section-label">Priorité</label>
+      <div class="buttons-grid" id="priority-buttons">
+        <button type="button" class="option-button" data-value="faible">Faible</button>
+        <button type="button" class="option-button" data-value="moyenne">Moyenne</button>
+        <button type="button" class="option-button" data-value="haute">Haute</button>
+        <button type="button" class="option-button active" data-value="critique">Critique</button>
+      </div>
+    </section>
+
+    <form id="appel-form">
+      <div class="flex-row">
+        <div class="form-group">
+          <label for="appelant_nom">Nom de l'appelant</label>
+          <input id="appelant_nom" name="appelant_nom" type="text" placeholder="Marie Lefebvre" required>
+        </div>
+        <div class="form-group">
+          <label for="appelant_tel">Téléphone</label>
+          <input id="appelant_tel" name="appelant_tel" type="tel" placeholder="514-555-0192" required>
+        </div>
+      </div>
+
+      <div class="form-group location-group">
+        <label for="adresse">Localisation</label>
+        <div class="location-row">
+          <input id="adresse" name="adresse" type="text" placeholder="1425 rue Sainte-Catherine, Montréal" required>
+          <button type="button" id="geolocate" class="geo-button">Géolocaliser</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description de l'incident</label>
+        <textarea id="description" name="description" placeholder="Incendie dans un appartement..." required></textarea>
+      </div>
+
+      <button class="submit-button" type="submit">Enregistrer et dispatcher</button>
+      <div class="message" id="appel-message"></div>
+    </form>
+  </div>
+
+  <div id="map-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Sélectionner la localisation</h2>
+        <button type="button" class="close-modal" id="close-map">✕</button>
+      </div>
+      <div id="map" class="map-container"></div>
+      <div class="modal-footer">
+        <p id="map-coords" class="map-info"></p>
+        <button type="button" id="confirm-location" class="confirm-button">Confirmer la localisation</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="../js/appel.js"></script>
+</body>
+</html>
