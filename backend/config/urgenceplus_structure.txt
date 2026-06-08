@@ -1,194 +1,7 @@
-================================================================
-  URGENCE+ — Structure complète du projet
-  Stack : Node.js + Express + PostgreSQL + HTML/CSS/JS
-  Architecture : MVC
-================================================================
+-- ============================================================
+--  2. TYPES ENUM
+-- ============================================================
 
-STRUCTURE DES DOSSIERS
-================================================================
-
-PROJET6/
-├── backend/
-│   ├── config/
-│   │   ├── database.js
-│   │   └── create_database.sql
-│   ├── models/
-│   │   ├── Utilisateur.js
-│   │   ├── Appel.js
-│   │   ├── Vehicule.js
-│   │   ├── Intervention.js
-│   │   └── Rapport.js
-│   ├── controllers/
-│   │   ├── auth.controller.js
-│   │   ├── appel.controller.js
-│   │   ├── intervention.controller.js
-│   │   ├── vehicule.controller.js
-│   │   └── rapport.controller.js
-│   ├── routes/
-│   │   ├── auth.routes.js
-│   │   ├── appel.routes.js
-│   │   ├── intervention.routes.js
-│   │   ├── vehicule.routes.js
-│   │   └── rapport.routes.js
-│   └── middlewares/
-│       ├── auth.middleware.js
-│       └── role.middleware.js
-├── frontend/
-│   ├── html/
-│   │   ├── login.html
-│   │   ├── dashboard.html
-│   │   ├── appels.html
-│   │   ├── interventions.html
-│   │   ├── carte.html
-│   │   └── rapports.html
-│   ├── css/
-│   │   ├── global.css
-│   │   └── components.css
-│   └── js/
-│       ├── api.js
-│       ├── auth.js
-│       ├── dashboard.js
-│       ├── appels.js
-│       ├── interventions.js
-│       └── carte.js
-├── .env
-├── .gitignore
-├── package.json
-└── server.js
-
-
-================================================================
-  FICHIER : package.json
-================================================================
-
-{
-  "name": "urgenceplus",
-  "version": "1.0.0",
-  "description": "Gestion des interventions d'urgence",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
-  },
-  "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "jsonwebtoken": "^9.0.2",
-    "pg": "^8.12.0",
-    "sequelize": "^6.37.3",
-    "socket.io": "^4.7.5"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.4"
-  }
-}
-
-
-================================================================
-  FICHIER : .env
-================================================================
-
-DB_HOST=localhost
-DB_NAME=urgenceplus
-DB_USER=postgres
-DB_PASS=votre_mot_de_passe
-
-JWT_SECRET=urgenceplus_secret_2024
-JWT_EXPIRES_IN=8h
-
-PORT=3000
-
-
-================================================================
-  FICHIER : .gitignore
-================================================================
-
-node_modules/
-.env
-*.log
-.DS_Store
-Thumbs.db
-
-
-================================================================
-  FICHIER : server.js
-================================================================
-
-const express    = require('express')
-const cors       = require('cors')
-const http       = require('http')
-const path       = require('path')
-const { Server } = require('socket.io')
-require('dotenv').config()
-
-const app    = express()
-const server = http.createServer(app)
-const io     = new Server(server, {
-  cors: { origin: '*' }
-})
-
-// Middleware
-app.use(cors())
-app.use(express.json())
-
-// Servir le frontend (fichiers statiques)
-app.use(express.static(path.join(__dirname, 'frontend')))
-
-// Routes API
-app.use('/api/auth',           require('./backend/routes/auth.routes'))
-app.use('/api/appels',         require('./backend/routes/appel.routes'))
-app.use('/api/interventions',  require('./backend/routes/intervention.routes'))
-app.use('/api/vehicules',      require('./backend/routes/vehicule.routes'))
-app.use('/api/rapports',       require('./backend/routes/rapport.routes'))
-
-// Rendre io accessible dans les controllers
-app.set('io', io)
-
-// Socket.io — temps réel
-io.on('connection', (socket) => {
-  console.log('Client connecté :', socket.id)
-  socket.on('disconnect', () => console.log('Client déconnecté'))
-})
-
-const PORT = process.env.PORT || 3000
-server.listen(PORT, () => {
-  console.log(`Serveur Urgence+ démarré sur http://localhost:${PORT}`)
-})
-
-
-================================================================
-  FICHIER : backend/config/database.js
-================================================================
-
-const { Sequelize } = require('sequelize')
-
-const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASS,
-  {
-    host:    process.env.DB_HOST || 'localhost',
-    dialect: 'postgres',
-    logging: false,
-  }
-)
-
-module.exports = sequelize
-
-
-================================================================
-  FICHIER : backend/config/create_database.sql
-================================================================
-
--- Créer la base de données
-CREATE DATABASE urgenceplus
-  WITH ENCODING = 'UTF8' TEMPLATE = template0;
-
-\connect urgenceplus;
-
--- Types ENUM
 CREATE TYPE role_enum                AS ENUM ('operateur', 'superviseur', 'admin');
 CREATE TYPE vehicule_type_enum       AS ENUM ('ambulance', 'camion_pompier', 'voiture_patrouille');
 CREATE TYPE vehicule_statut_enum     AS ENUM ('disponible', 'en_mission', 'hors_service');
@@ -197,658 +10,260 @@ CREATE TYPE priorite_enum            AS ENUM ('faible', 'moyenne', 'haute', 'cri
 CREATE TYPE appel_statut_enum        AS ENUM ('recu', 'en_traitement', 'cloture');
 CREATE TYPE intervention_statut_enum AS ENUM ('en_attente', 'en_route', 'sur_place', 'termine');
 
--- Table utilisateurs
+
+-- ============================================================
+--  3. TABLES
+-- ============================================================
+
+-- TABLE : utilisateurs
 CREATE TABLE utilisateurs (
-  id           SERIAL PRIMARY KEY,
-  nom          VARCHAR(100) NOT NULL,
-  email        VARCHAR(150) NOT NULL UNIQUE,
-  mot_de_passe VARCHAR(255) NOT NULL,
-  role         role_enum    NOT NULL DEFAULT 'operateur',
-  "createdAt"  TIMESTAMP    NOT NULL DEFAULT NOW(),
-  "updatedAt"  TIMESTAMP    NOT NULL DEFAULT NOW()
+    id            SERIAL       PRIMARY KEY,
+    nom           VARCHAR(100) NOT NULL,
+    email         VARCHAR(150) NOT NULL UNIQUE,
+    mot_de_passe  VARCHAR(255) NOT NULL,    -- hashé avec bcrypt (10 rounds)
+    role          role_enum    NOT NULL DEFAULT 'operateur',
+    "createdAt"   TIMESTAMP    NOT NULL DEFAULT NOW(),
+    "updatedAt"   TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
--- Table vehicules
+-- TABLE : vehicules
 CREATE TABLE vehicules (
-  id              SERIAL PRIMARY KEY,
-  nom             VARCHAR(100)         NOT NULL,
-  immatriculation VARCHAR(20)          NOT NULL UNIQUE,
-  type            vehicule_type_enum   NOT NULL,
-  statut          vehicule_statut_enum NOT NULL DEFAULT 'disponible',
-  latitude        FLOAT,
-  longitude       FLOAT,
-  "createdAt"     TIMESTAMP            NOT NULL DEFAULT NOW(),
-  "updatedAt"     TIMESTAMP            NOT NULL DEFAULT NOW()
+    id               SERIAL               PRIMARY KEY,
+    nom              VARCHAR(100)         NOT NULL,
+    immatriculation  VARCHAR(20)          NOT NULL UNIQUE,
+    type             vehicule_type_enum   NOT NULL,
+    statut           vehicule_statut_enum NOT NULL DEFAULT 'disponible',
+    latitude         FLOAT,
+    longitude        FLOAT,
+    "createdAt"      TIMESTAMP            NOT NULL DEFAULT NOW(),
+    "updatedAt"      TIMESTAMP            NOT NULL DEFAULT NOW()
 );
 
--- Table appels
+-- TABLE : appels
 CREATE TABLE appels (
-  id           SERIAL PRIMARY KEY,
-  appelant_nom VARCHAR(100)      NOT NULL,
-  appelant_tel VARCHAR(20)       NOT NULL,
-  description  TEXT,
-  type_urgence urgence_type_enum NOT NULL,
-  priorite     priorite_enum     NOT NULL DEFAULT 'moyenne',
-  latitude     FLOAT,
-  longitude    FLOAT,
-  adresse      VARCHAR(255),
-  statut       appel_statut_enum NOT NULL DEFAULT 'recu',
-  operateur_id INT REFERENCES utilisateurs(id) ON DELETE SET NULL,
-  "createdAt"  TIMESTAMP         NOT NULL DEFAULT NOW(),
-  "updatedAt"  TIMESTAMP         NOT NULL DEFAULT NOW()
+    id            SERIAL            PRIMARY KEY,
+    appelant_nom  VARCHAR(100)      NOT NULL,
+    appelant_tel  VARCHAR(20)       NOT NULL,
+    description   TEXT,
+    type_urgence  urgence_type_enum NOT NULL,
+    priorite      priorite_enum     NOT NULL DEFAULT 'moyenne',
+    latitude      FLOAT,
+    longitude     FLOAT,
+    adresse       VARCHAR(255),
+    statut        appel_statut_enum NOT NULL DEFAULT 'recu',
+    operateur_id  INT               REFERENCES utilisateurs(id) ON DELETE SET NULL,
+    "createdAt"   TIMESTAMP         NOT NULL DEFAULT NOW(),
+    "updatedAt"   TIMESTAMP         NOT NULL DEFAULT NOW()
 );
 
--- Table interventions
+-- TABLE : interventions
 CREATE TABLE interventions (
-  id          SERIAL PRIMARY KEY,
-  statut      intervention_statut_enum NOT NULL DEFAULT 'en_attente',
-  date_debut  TIMESTAMP,
-  date_fin    TIMESTAMP,
-  notes       TEXT,
-  appel_id    INT REFERENCES appels(id)       ON DELETE CASCADE,
-  vehicule_id INT REFERENCES vehicules(id)    ON DELETE SET NULL,
-  agent_id    INT REFERENCES utilisateurs(id) ON DELETE SET NULL,
-  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
-  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+    id           SERIAL                   PRIMARY KEY,
+    statut       intervention_statut_enum NOT NULL DEFAULT 'en_attente',
+    date_debut   TIMESTAMP,
+    date_fin     TIMESTAMP,
+    notes        TEXT,
+    appel_id     INT  REFERENCES appels(id)       ON DELETE CASCADE,
+    vehicule_id  INT  REFERENCES vehicules(id)    ON DELETE SET NULL,
+    agent_id     INT  REFERENCES utilisateurs(id) ON DELETE SET NULL,
+    "createdAt"  TIMESTAMP NOT NULL DEFAULT NOW(),
+    "updatedAt"  TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- Table rapports
+-- TABLE : rapports
 CREATE TABLE rapports (
-  id              SERIAL PRIMARY KEY,
-  titre           VARCHAR(200) NOT NULL,
-  contenu         TEXT,
-  intervention_id INT REFERENCES interventions(id) ON DELETE CASCADE,
-  auteur_id       INT REFERENCES utilisateurs(id)  ON DELETE SET NULL,
-  "createdAt"     TIMESTAMP NOT NULL DEFAULT NOW(),
-  "updatedAt"     TIMESTAMP NOT NULL DEFAULT NOW()
+    id               SERIAL       PRIMARY KEY,
+    titre            VARCHAR(200) NOT NULL,
+    contenu          TEXT,
+    intervention_id  INT  REFERENCES interventions(id) ON DELETE CASCADE,
+    auteur_id        INT  REFERENCES utilisateurs(id)  ON DELETE SET NULL,
+    "createdAt"      TIMESTAMP NOT NULL DEFAULT NOW(),
+    "updatedAt"      TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- Index
-CREATE INDEX idx_appels_statut         ON appels(statut);
-CREATE INDEX idx_appels_priorite       ON appels(priorite);
-CREATE INDEX idx_interventions_statut  ON interventions(statut);
-CREATE INDEX idx_vehicules_statut      ON vehicules(statut);
 
--- Données de base : utilisateurs (mot de passe : Admin1234)
+-- ============================================================
+--  4. INDEX
+-- ============================================================
+
+CREATE INDEX idx_appels_statut        ON appels(statut);
+CREATE INDEX idx_appels_priorite      ON appels(priorite);
+CREATE INDEX idx_appels_operateur     ON appels(operateur_id);
+CREATE INDEX idx_interventions_statut ON interventions(statut);
+CREATE INDEX idx_interventions_appel  ON interventions(appel_id);
+CREATE INDEX idx_vehicules_statut     ON vehicules(statut);
+
+
+-- ============================================================
+--  5. INSERTION — UTILISATEURS
+--
+--  Mots de passe hashés avec bcrypt (10 rounds)
+--  via : bcrypt.hashSync('motdepasse', 10)
+--
+--  ┌─────────────────────────────┬──────────────────┬─────────────┐
+--  │ Email                       │ Mot de passe     │ Rôle        │
+--  ├─────────────────────────────┼──────────────────┼─────────────┤
+--  │ superviseur@urgence.ca      │ Admin1234        │ superviseur │
+--  │ operateur1@urgence.ca       │ Operateur1234    │ operateur   │
+--  │ operateur2@urgence.ca       │ Operateur5678    │ operateur   │
+--  └─────────────────────────────┴──────────────────┴─────────────┘
+-- ============================================================
+
 INSERT INTO utilisateurs (nom, email, mot_de_passe, role) VALUES
-('Sophie Tremblay', 'superviseur@urgence.ca', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lihO', 'superviseur'),
-('Joel Loa',        'operateur@urgence.ca',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lihO', 'operateur');
 
--- Données de base : 5 véhicules simulés
+(
+    'Sophie Tremblay',
+    'superviseur@urgence.ca',
+    -- Mot de passe en clair : Admin1234
+    '$2b$10$LwoIIPuTk18UPBjYLKt7V.qgOUcVHEYv0mYfK8PuJfjmMkGUGd3sG',
+    'superviseur'
+),
+
+(
+    'Joel Loa',
+    'operateur1@urgence.ca',
+    -- Mot de passe en clair : Operateur1234
+    '$2b$10$dMNdFGD2LGnPOSh.fp6Oa.zjLD0HXySgmiFCN3rgYPJxMxb8FzvIm',
+    'operateur'
+),
+
+(
+    'Marc Beauchamp',
+    'operateur2@urgence.ca',
+    -- Mot de passe en clair : Operateur5678
+    '$2b$10$0tF8Bo/k8TLbLHnUDfuutur.K7eNltgu.fYo5jlCSLTVlQWjlFNh2',
+    'operateur'
+);
+
+
+-- ============================================================
+--  6. INSERTION — VÉHICULES (5 simulés)
+--  Coordonnées GPS : secteur centre-ville de Montréal
+-- ============================================================
+
 INSERT INTO vehicules (nom, immatriculation, type, statut, latitude, longitude) VALUES
-('Ambulance 01',         'AMB-001', 'ambulance',          'disponible',   45.5017, -73.5673),
-('Camion Pompier 01',    'POM-001', 'camion_pompier',     'disponible',   45.5088, -73.5540),
-('Camion Pompier 02',    'POM-002', 'camion_pompier',     'disponible',   45.4972, -73.5790),
-('Voiture Patrouille 01','PAT-001', 'voiture_patrouille', 'disponible',   45.5231, -73.5817),
-('Voiture Patrouille 02','PAT-002', 'voiture_patrouille', 'hors_service', 45.5150, -73.5700);
-
-
-================================================================
-  FICHIER : backend/models/Utilisateur.js
-================================================================
-
-const { DataTypes } = require('sequelize')
-const sequelize = require('../config/database')
-
-const Utilisateur = sequelize.define('Utilisateur', {
-  id:           { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  nom:          { type: DataTypes.STRING,  allowNull: false },
-  email:        { type: DataTypes.STRING,  allowNull: false, unique: true },
-  mot_de_passe: { type: DataTypes.STRING,  allowNull: false },
-  role: {
-    type: DataTypes.ENUM('operateur', 'superviseur', 'admin'),
-    defaultValue: 'operateur'
-  }
-}, { tableName: 'utilisateurs', timestamps: true })
-
-module.exports = Utilisateur
-
-
-================================================================
-  FICHIER : backend/models/Appel.js
-================================================================
-
-const { DataTypes } = require('sequelize')
-const sequelize = require('../config/database')
-
-const Appel = sequelize.define('Appel', {
-  id:           { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  appelant_nom: { type: DataTypes.STRING, allowNull: false },
-  appelant_tel: { type: DataTypes.STRING, allowNull: false },
-  description:  { type: DataTypes.TEXT },
-  type_urgence: {
-    type: DataTypes.ENUM('incendie', 'medical', 'accident', 'autre'),
-    allowNull: false
-  },
-  priorite: {
-    type: DataTypes.ENUM('faible', 'moyenne', 'haute', 'critique'),
-    defaultValue: 'moyenne'
-  },
-  latitude:     { type: DataTypes.FLOAT },
-  longitude:    { type: DataTypes.FLOAT },
-  adresse:      { type: DataTypes.STRING },
-  statut: {
-    type: DataTypes.ENUM('recu', 'en_traitement', 'cloture'),
-    defaultValue: 'recu'
-  },
-  operateur_id: { type: DataTypes.INTEGER }
-}, { tableName: 'appels', timestamps: true })
-
-module.exports = Appel
-
-
-================================================================
-  FICHIER : backend/models/Vehicule.js
-================================================================
-
-const { DataTypes } = require('sequelize')
-const sequelize = require('../config/database')
-
-const Vehicule = sequelize.define('Vehicule', {
-  id:              { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  nom:             { type: DataTypes.STRING,  allowNull: false },
-  immatriculation: { type: DataTypes.STRING,  allowNull: false, unique: true },
-  type: {
-    type: DataTypes.ENUM('ambulance', 'camion_pompier', 'voiture_patrouille'),
-    allowNull: false
-  },
-  statut: {
-    type: DataTypes.ENUM('disponible', 'en_mission', 'hors_service'),
-    defaultValue: 'disponible'
-  },
-  latitude:  { type: DataTypes.FLOAT },
-  longitude: { type: DataTypes.FLOAT }
-}, { tableName: 'vehicules', timestamps: true })
-
-module.exports = Vehicule
-
-
-================================================================
-  FICHIER : backend/models/Intervention.js
-================================================================
-
-const { DataTypes } = require('sequelize')
-const sequelize = require('../config/database')
-
-const Intervention = sequelize.define('Intervention', {
-  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  statut: {
-    type: DataTypes.ENUM('en_attente', 'en_route', 'sur_place', 'termine'),
-    defaultValue: 'en_attente'
-  },
-  date_debut:  { type: DataTypes.DATE },
-  date_fin:    { type: DataTypes.DATE },
-  notes:       { type: DataTypes.TEXT },
-  appel_id:    { type: DataTypes.INTEGER },
-  vehicule_id: { type: DataTypes.INTEGER },
-  agent_id:    { type: DataTypes.INTEGER }
-}, { tableName: 'interventions', timestamps: true })
-
-module.exports = Intervention
-
-
-================================================================
-  FICHIER : backend/models/Rapport.js
-================================================================
-
-const { DataTypes } = require('sequelize')
-const sequelize = require('../config/database')
-
-const Rapport = sequelize.define('Rapport', {
-  id:              { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  titre:           { type: DataTypes.STRING,  allowNull: false },
-  contenu:         { type: DataTypes.TEXT },
-  intervention_id: { type: DataTypes.INTEGER },
-  auteur_id:       { type: DataTypes.INTEGER }
-}, { tableName: 'rapports', timestamps: true })
-
-module.exports = Rapport
-
-
-================================================================
-  FICHIER : backend/middlewares/auth.middleware.js
-================================================================
-
-const jwt = require('jsonwebtoken')
-
-const authMiddleware = (req, res, next) => {
-  const authHeader = req.headers.authorization
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'Token manquant' })
-  }
-  const token = authHeader.split(' ')[1]
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
-    req.user = decoded
-    next()
-  } catch {
-    return res.status(401).json({ message: 'Token invalide ou expiré' })
-  }
-}
-
-module.exports = authMiddleware
-
-
-================================================================
-  FICHIER : backend/middlewares/role.middleware.js
-================================================================
-
-const superviseurOnly = (req, res, next) => {
-  if (req.user.role !== 'superviseur') {
-    return res.status(403).json({ message: 'Accès réservé au superviseur' })
-  }
-  next()
-}
-
-const operateurOuSuperviseur = (req, res, next) => {
-  if (!['operateur', 'superviseur'].includes(req.user.role)) {
-    return res.status(403).json({ message: 'Accès non autorisé' })
-  }
-  next()
-}
-
-module.exports = { superviseurOnly, operateurOuSuperviseur }
-
-
-================================================================
-  FICHIER : backend/controllers/auth.controller.js
-================================================================
-
-const bcrypt      = require('bcryptjs')
-const jwt         = require('jsonwebtoken')
-const Utilisateur = require('../models/Utilisateur')
-
-// POST /api/auth/login
-const login = async (req, res) => {
-  try {
-    const { email, mot_de_passe } = req.body
-    const utilisateur = await Utilisateur.findOne({ where: { email } })
-    if (!utilisateur) {
-      return res.status(401).json({ message: 'Identifiants incorrects' })
-    }
-    const valide = await bcrypt.compare(mot_de_passe, utilisateur.mot_de_passe)
-    if (!valide) {
-      return res.status(401).json({ message: 'Identifiants incorrects' })
-    }
-    const token = jwt.sign(
-      { id: utilisateur.id, role: utilisateur.role, nom: utilisateur.nom },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
-    )
-    res.json({
-      token,
-      utilisateur: { id: utilisateur.id, nom: utilisateur.nom, role: utilisateur.role }
-    })
-  } catch (err) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: err.message })
-  }
-}
-
-module.exports = { login }
-
-
-================================================================
-  FICHIER : backend/controllers/appel.controller.js
-================================================================
-
-const Appel = require('../models/Appel')
-
-// GET /api/appels
-const getAll = async (req, res) => {
-  try {
-    const appels = await Appel.findAll({ order: [['createdAt', 'DESC']] })
-    res.json(appels)
-  } catch (err) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: err.message })
-  }
-}
-
-// GET /api/appels/:id
-const getById = async (req, res) => {
-  try {
-    const appel = await Appel.findByPk(req.params.id)
-    if (!appel) return res.status(404).json({ message: 'Appel introuvable' })
-    res.json(appel)
-  } catch (err) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: err.message })
-  }
-}
-
-// POST /api/appels
-const create = async (req, res) => {
-  try {
-    const appel = await Appel.create({ ...req.body, operateur_id: req.user.id })
-    req.app.get('io').emit('nouvel_appel', appel)
-    res.status(201).json(appel)
-  } catch (err) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: err.message })
-  }
-}
-
-// PATCH /api/appels/:id/statut
-const updateStatut = async (req, res) => {
-  try {
-    const appel = await Appel.findByPk(req.params.id)
-    if (!appel) return res.status(404).json({ message: 'Appel introuvable' })
-    await appel.update({ statut: req.body.statut })
-    res.json(appel)
-  } catch (err) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: err.message })
-  }
-}
-
-module.exports = { getAll, getById, create, updateStatut }
-
-
-================================================================
-  FICHIER : backend/controllers/intervention.controller.js
-================================================================
-
-const Intervention = require('../models/Intervention')
-const Vehicule     = require('../models/Vehicule')
-
-// GET /api/interventions
-const getAll = async (req, res) => {
-  try {
-    const interventions = await Intervention.findAll({ order: [['createdAt', 'DESC']] })
-    res.json(interventions)
-  } catch (err) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: err.message })
-  }
-}
-
-// POST /api/interventions
-const create = async (req, res) => {
-  try {
-    const intervention = await Intervention.create({
-      ...req.body,
-      date_debut: new Date()
-    })
-    // Marquer le véhicule comme en mission
-    if (req.body.vehicule_id) {
-      await Vehicule.update(
-        { statut: 'en_mission' },
-        { where: { id: req.body.vehicule_id } }
-      )
-    }
-    req.app.get('io').emit('nouvelle_intervention', intervention)
-    res.status(201).json(intervention)
-  } catch (err) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: err.message })
-  }
-}
-
-// PATCH /api/interventions/:id/statut
-const updateStatut = async (req, res) => {
-  try {
-    const intervention = await Intervention.findByPk(req.params.id)
-    if (!intervention) return res.status(404).json({ message: 'Intervention introuvable' })
-
-    const updates = { statut: req.body.statut }
-    if (req.body.statut === 'termine') {
-      updates.date_fin = new Date()
-      // Libérer le véhicule
-      if (intervention.vehicule_id) {
-        await Vehicule.update(
-          { statut: 'disponible' },
-          { where: { id: intervention.vehicule_id } }
-        )
-      }
-    }
-    await intervention.update(updates)
-    req.app.get('io').emit('statut_intervention', intervention)
-    res.json(intervention)
-  } catch (err) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: err.message })
-  }
-}
-
-module.exports = { getAll, create, updateStatut }
-
-
-================================================================
-  FICHIER : backend/controllers/vehicule.controller.js
-================================================================
-
-const Vehicule = require('../models/Vehicule')
-
-// GET /api/vehicules
-const getAll = async (req, res) => {
-  try {
-    const vehicules = await Vehicule.findAll()
-    res.json(vehicules)
-  } catch (err) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: err.message })
-  }
-}
-
-// GET /api/vehicules/disponibles
-const getDisponibles = async (req, res) => {
-  try {
-    const vehicules = await Vehicule.findAll({ where: { statut: 'disponible' } })
-    res.json(vehicules)
-  } catch (err) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: err.message })
-  }
-}
-
-module.exports = { getAll, getDisponibles }
-
-
-================================================================
-  FICHIER : backend/controllers/rapport.controller.js
-================================================================
-
-const Rapport = require('../models/Rapport')
-
-// GET /api/rapports
-const getAll = async (req, res) => {
-  try {
-    const rapports = await Rapport.findAll({ order: [['createdAt', 'DESC']] })
-    res.json(rapports)
-  } catch (err) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: err.message })
-  }
-}
-
-// POST /api/rapports
-const create = async (req, res) => {
-  try {
-    const rapport = await Rapport.create({ ...req.body, auteur_id: req.user.id })
-    res.status(201).json(rapport)
-  } catch (err) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: err.message })
-  }
-}
-
-module.exports = { getAll, create }
-
-
-================================================================
-  FICHIER : backend/routes/auth.routes.js
-================================================================
-
-const express    = require('express')
-const router     = express.Router()
-const { login }  = require('../controllers/auth.controller')
-
-router.post('/login', login)
-
-module.exports = router
-
-
-================================================================
-  FICHIER : backend/routes/appel.routes.js
-================================================================
-
-const express        = require('express')
-const router         = express.Router()
-const ctrl           = require('../controllers/appel.controller')
-const authMiddleware = require('../middlewares/auth.middleware')
-
-router.use(authMiddleware)
-
-router.get('/',              ctrl.getAll)
-router.get('/:id',           ctrl.getById)
-router.post('/',             ctrl.create)
-router.patch('/:id/statut',  ctrl.updateStatut)
-
-module.exports = router
-
-
-================================================================
-  FICHIER : backend/routes/intervention.routes.js
-================================================================
-
-const express        = require('express')
-const router         = express.Router()
-const ctrl           = require('../controllers/intervention.controller')
-const authMiddleware = require('../middlewares/auth.middleware')
-
-router.use(authMiddleware)
-
-router.get('/',             ctrl.getAll)
-router.post('/',            ctrl.create)
-router.patch('/:id/statut', ctrl.updateStatut)
-
-module.exports = router
-
-
-================================================================
-  FICHIER : backend/routes/vehicule.routes.js
-================================================================
-
-const express        = require('express')
-const router         = express.Router()
-const ctrl           = require('../controllers/vehicule.controller')
-const authMiddleware = require('../middlewares/auth.middleware')
-
-router.use(authMiddleware)
-
-router.get('/',            ctrl.getAll)
-router.get('/disponibles', ctrl.getDisponibles)
-
-module.exports = router
-
-
-================================================================
-  FICHIER : backend/routes/rapport.routes.js
-================================================================
-
-const express        = require('express')
-const router         = express.Router()
-const ctrl           = require('../controllers/rapport.controller')
-const authMiddleware = require('../middlewares/auth.middleware')
-
-router.use(authMiddleware)
-
-router.get('/',  ctrl.getAll)
-router.post('/', ctrl.create)
-
-module.exports = router
-
-
-================================================================
-  FICHIER : frontend/js/api.js
-  (Fonctions utilitaires pour tous les appels fetch)
-================================================================
-
-const API_URL = 'http://localhost:3000/api'
-
-// Récupérer le token JWT stocké
-const getToken = () => localStorage.getItem('token')
-
-// Requête GET
-const get = async (endpoint) => {
-  const res = await fetch(`${API_URL}${endpoint}`, {
-    headers: { 'Authorization': `Bearer ${getToken()}` }
-  })
-  if (!res.ok) throw new Error(`Erreur ${res.status}`)
-  return res.json()
-}
-
-// Requête POST
-const post = async (endpoint, data) => {
-  const res = await fetch(`${API_URL}${endpoint}`, {
-    method:  'POST',
-    headers: {
-      'Content-Type':  'application/json',
-      'Authorization': `Bearer ${getToken()}`
-    },
-    body: JSON.stringify(data)
-  })
-  if (!res.ok) throw new Error(`Erreur ${res.status}`)
-  return res.json()
-}
-
-// Requête PATCH
-const patch = async (endpoint, data) => {
-  const res = await fetch(`${API_URL}${endpoint}`, {
-    method:  'PATCH',
-    headers: {
-      'Content-Type':  'application/json',
-      'Authorization': `Bearer ${getToken()}`
-    },
-    body: JSON.stringify(data)
-  })
-  if (!res.ok) throw new Error(`Erreur ${res.status}`)
-  return res.json()
-}
-
-export { get, post, patch }
-
-
-================================================================
-  FICHIER : frontend/js/auth.js
-================================================================
-
-import { post } from './api.js'
-
-const form = document.getElementById('login-form')
-
-form.addEventListener('submit', async (e) => {
-  e.preventDefault()
-  const email       = document.getElementById('email').value
-  const mot_de_passe = document.getElementById('mot_de_passe').value
-
-  try {
-    const data = await post('/auth/login', { email, mot_de_passe })
-    localStorage.setItem('token',       data.token)
-    localStorage.setItem('utilisateur', JSON.stringify(data.utilisateur))
-
-    // Rediriger selon le rôle
-    if (data.utilisateur.role === 'superviseur') {
-      window.location.href = '/html/dashboard.html'
-    } else {
-      window.location.href = '/html/appels.html'
-    }
-  } catch (err) {
-    document.getElementById('erreur').textContent = 'Identifiants incorrects'
-  }
-})
-
-
-================================================================
-  COMMANDES POUR DÉMARRER LE PROJET
-================================================================
-
-1. Installer les dépendances
-   cd PROJET6
-   npm install
-
-2. Créer la base de données PostgreSQL
-   psql -U postgres -f backend/config/create_database.sql
-
-3. Lancer le serveur
-   npm run dev
-
-4. Ouvrir dans le navigateur
-   http://localhost:3000/html/login.html
-
-Identifiants de test (mot de passe : Admin1234) :
-  superviseur@urgence.ca  →  accès dashboard
-  operateur@urgence.ca    →  accès formulaire appels
-
-================================================================
-  FIN DU DOCUMENT
-================================================================
+('Ambulance 01',          'AMB-001', 'ambulance',          'disponible',  45.5017, -73.5673),
+('Ambulance 02',          'AMB-002', 'ambulance',          'disponible',  45.5200, -73.5800),
+('Camion Pompier 01',     'POM-001', 'camion_pompier',     'disponible',  45.5088, -73.5540),
+('Camion Pompier 02',     'POM-002', 'camion_pompier',     'disponible',  45.4972, -73.5790),
+('Voiture Patrouille 01', 'PAT-001', 'voiture_patrouille', 'hors_service',45.5150, -73.5700);
+
+
+-- ============================================================
+--  7. INSERTION — APPELS DE TEST (5 appels)
+-- ============================================================
+
+INSERT INTO appels
+    (appelant_nom, appelant_tel, description, type_urgence, priorite, latitude, longitude, adresse, statut, operateur_id)
+VALUES
+
+(
+    'Marie Lefebvre', '514-555-0192',
+    'Incendie dans un appartement au 3e étage. Résidents coincés à l intérieur. Fumée visible depuis la rue.',
+    'incendie', 'critique',
+    45.5161, -73.5791,
+    '1425 rue Sainte-Catherine O, Montréal',
+    'en_traitement', 2
+),
+
+(
+    'Pierre Gagnon', '514-555-0347',
+    'Personne inconsciente sur le trottoir. Respiration faible, ne répond pas.',
+    'medical', 'haute',
+    45.5200, -73.5660,
+    '3481 rue Saint-Denis, Montréal',
+    'en_traitement', 2
+),
+
+(
+    'Linda Côté', '514-555-0581',
+    'Collision frontale entre deux véhicules. Une personne coincée dans l habitacle.',
+    'accident', 'haute',
+    45.5248, -73.5877,
+    '5400 rue Sherbrooke O, Montréal',
+    'recu', 2
+),
+
+(
+    'Ahmed Bouali', '514-555-0734',
+    'Odeur de gaz signalée dans le sous-sol de l immeuble. Résidents évacués partiellement.',
+    'autre', 'moyenne',
+    45.5050, -73.5600,
+    '900 boul. De Maisonneuve E, Montréal',
+    'recu', 3
+),
+
+(
+    'Julie Martin', '514-555-0912',
+    'Chute d une personne âgée de 78 ans. Impossible de se relever. Douleur au bassin.',
+    'medical', 'moyenne',
+    45.5300, -73.6100,
+    '77 rue Sherbrooke O, Montréal',
+    'cloture', 3
+);
+
+
+-- ============================================================
+--  8. INSERTION — INTERVENTIONS DE TEST
+-- ============================================================
+
+INSERT INTO interventions
+    (statut, date_debut, date_fin, notes, appel_id, vehicule_id, agent_id)
+VALUES
+
+(
+    'en_route',
+    NOW() - INTERVAL '5 minutes', NULL,
+    'Départ immédiat. Trafic fluide sur Ste-Catherine.',
+    1, 3, 2    -- appel #1, Camion Pompier 01, Joel
+),
+
+(
+    'sur_place',
+    NOW() - INTERVAL '12 minutes', NULL,
+    'Patient stabilisé. Transfert vers CHUM en cours.',
+    2, 1, 2    -- appel #2, Ambulance 01, Joel
+),
+
+(
+    'en_attente',
+    NULL, NULL,
+    NULL,
+    3, NULL, 3  -- appel #3, pas encore assigné, Marc
+),
+
+(
+    'termine',
+    NOW() - INTERVAL '50 minutes',
+    NOW() - INTERVAL '20 minutes',
+    'Intervention terminée sans complication. Patient transporté à l Hôpital Général.',
+    5, 2, 3    -- appel #5, Ambulance 02, Marc
+);
+
+
+-- ============================================================
+--  9. INSERTION — RAPPORT DE TEST
+-- ============================================================
+
+INSERT INTO rapports (titre, contenu, intervention_id, auteur_id)
+VALUES (
+    'Rapport INT-004 — Chute personne âgée Sherbrooke',
+    'Intervention réalisée au 77 rue Sherbrooke O. '
+    'Patiente Mme Julie Martin, 78 ans, chute dans salle de bain. '
+    'Prise en charge en 9 minutes. '
+    'Aucune fracture confirmée sur place. '
+    'Transport vers Hôpital Général de Montréal effectué à 13h45. '
+    'Dossier clos.',
+    4, 1    -- intervention #4, auteur : Sophie Tremblay (superviseure)
+);
+
+
+-- ============================================================
+--  10. VÉRIFICATION — Résumé des données insérées
+-- ============================================================
+
+SELECT 'utilisateurs'  AS table_name, COUNT(*) AS total FROM utilisateurs  UNION ALL
+SELECT 'vehicules',                   COUNT(*)           FROM vehicules      UNION ALL
+SELECT 'appels',                      COUNT(*)           FROM appels         UNION ALL
+SELECT 'interventions',               COUNT(*)           FROM interventions  UNION ALL
+SELECT 'rapports',                    COUNT(*)           FROM rapports;
