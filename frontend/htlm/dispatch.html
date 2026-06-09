@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dispatch — Urgence+</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    :root{
+      --bg:       #05101a;
+      --panel:    #0d1624;
+      --panel2:   #111b2b;
+      --border:   #13213f;
+      --text:     #e8eeff;
+      --muted:    #8ea3c1;
+      --accent:   #3ba3ff;   /* bleu — couleur principale */
+      --success:  #2ec48a;   /* vert  — disponible        */
+      --warning:  #ffbf56;   /* jaune — sur place         */
+      --danger:   #f35f5f;   /* rouge — critique/attente  */
+      --grey:     #8b94a6;   /* gris  — hors service      */
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Inter,system-ui,Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+    /* ── Topbar ── */
+    .topbar{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:16px 24px;border-bottom:1px solid var(--border);
+      background:var(--panel);position:sticky;top:0;z-index:100;
+    }
+    .topbar-left{display:flex;align-items:center;gap:12px}
+    .logo{
+      width:36px;height:36px;border-radius:10px;
+      background:var(--danger);display:flex;align-items:center;
+      justify-content:center;font-size:18px;
+    }
+    .topbar h1{font-size:1.1rem;font-weight:600}
+    .topbar p{font-size:.8rem;color:var(--muted);margin-top:2px}
+    .live-badge{
+      display:flex;align-items:center;gap:6px;
+      background:#0d1f0d;border:1px solid var(--success);
+      color:var(--success);padding:6px 12px;border-radius:999px;font-size:.8rem;
+    }
+    .live-dot{width:8px;height:8px;border-radius:50%;background:var(--success);animation:blink 1.4s infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+    /* ── Layout ── */
+    .page{padding:20px 24px;max-width:1400px;margin:0 auto}
+
+    /* ── Stats ── */
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+    .stat-card{
+      background:var(--panel);border:1px solid var(--border);
+      border-radius:16px;padding:18px 20px;
+    }
+    .stat-label{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+    .stat-value{font-size:1.9rem;font-weight:700;margin-top:8px}
+    .stat-sub{font-size:.78rem;color:var(--muted);margin-top:4px}
+
+    /* ── Carte ── */
+    .map-panel{
+      background:var(--panel);border:1px solid var(--border);
+      border-radius:20px;padding:20px;margin-bottom:20px;
+    }
+    .map-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;gap:12px}
+    .map-header h2{font-size:1rem;font-weight:600}
+    .map-header p{font-size:.8rem;color:var(--muted);margin-top:3px}
+    .filters{display:flex;gap:8px;flex-wrap:wrap}
+    .filter-button{
+      background:var(--panel2);color:var(--muted);
+      padding:7px 14px;border:1px solid var(--border);
+      border-radius:999px;cursor:pointer;font-size:.82rem;transition:all .15s;
+    }
+    .filter-button:hover{border-color:var(--accent);color:var(--text)}
+    .filter-button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+    #map{height:400px;border-radius:14px;overflow:hidden;border:1px solid var(--border)}
+
+    /* ── Légende carte ── */
+    .map-legend{
+      display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;
+      font-size:.78rem;color:var(--muted);
+    }
+    .legend-item{display:flex;align-items:center;gap:6px}
+    .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+    /* ── Listes ── */
+    .split-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .list-panel{
+      background:var(--panel);border:1px solid var(--border);
+      border-radius:16px;overflow:hidden;
+    }
+    .list-header{
+      padding:14px 18px;border-bottom:1px solid var(--border);
+      display:flex;justify-content:space-between;align-items:center;
+    }
+    .list-title{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+    .list-count{
+      font-size:.75rem;background:var(--panel2);
+      color:var(--accent);padding:3px 10px;border-radius:999px;
+      border:1px solid var(--border);
+    }
+    .card-list{list-style:none}
+    .card-item{
+      padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.04);
+      transition:background .15s;
+    }
+    .card-item:last-child{border-bottom:none}
+    .card-item:hover{background:var(--panel2)}
+    .card-item strong{display:block;font-size:.9rem;margin-bottom:5px}
+    .item-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .pill{padding:2px 9px;border-radius:999px;font-size:.75rem;font-weight:500}
+    .empty-state{padding:24px 18px;color:var(--muted);font-style:italic;font-size:.88rem;text-align:center}
+
+    /* ── Boutons ── */
+    .btn{
+      border:none;border-radius:999px;padding:8px 16px;
+      font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s;
+    }
+    .btn:disabled{opacity:.45;cursor:not-allowed}
+    .btn.primary{background:var(--accent);color:#fff}
+    .btn.primary:hover:not(:disabled){background:#2490e8}
+    .btn.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border)}
+    .btn.secondary:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+    .btn.assigned{background:transparent;color:var(--success);border:1px solid var(--success);opacity:.6}
+
+    /* ── Modal ── */
+    #assignModal{
+      position:fixed;inset:0;display:none;
+      align-items:center;justify-content:center;
+      background:rgba(0,0,0,.6);z-index:9999;padding:20px;
+    }
+    .modal{
+      background:#0d1724;border:1px solid var(--border);
+      border-radius:20px;padding:28px;width:min(480px,100%);
+    }
+    .modal h4{margin:0 0 20px;font-size:1rem;color:#fff}
+    .modal label{display:block;color:var(--muted);font-size:.8rem;margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em}
+    .modal select{
+      width:100%;padding:12px 14px;border-radius:12px;
+      border:1px solid var(--border);background:#07101d;
+      color:var(--text);font-size:.9rem;
+    }
+    .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:22px}
+
+    /* ── Toast ── */
+    .toast{
+      position:fixed;right:20px;bottom:24px;
+      background:rgba(13,23,36,.96);color:#fff;
+      padding:12px 18px;border-radius:14px;
+      box-shadow:0 8px 32px rgba(0,0,0,.4);
+      display:none;z-index:10000;font-size:.88rem;
+      border:1px solid var(--border);
+    }
+
+    @media(max-width:900px){
+      .stats-row{grid-template-columns:repeat(2,1fr)}
+      .split-grid{grid-template-columns:1fr}
+    }
+    @media(max-width:540px){
+      .stats-row{grid-template-columns:1fr 1fr}
+      .topbar h1{font-size:.95rem}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo">🚨</div>
+      <div>
+        <h1>Urgence+ — Dispatch</h1>
+        <p>Tableau de bord superviseur · Temps réel</p>
+      </div>
+    </div>
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      En direct
+    </div>
+  </div>
+
+  <div class="page">
+
+    <!-- Statistiques -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Interventions actives</div>
+        <div class="stat-value" id="interventionsActive" style="color:var(--danger)">0</div>
+        <div class="stat-sub">en attente ou en route</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Véhicules en mission</div>
+        <div class="stat-value" id="vehiclesEnRoute" style="color:var(--accent)">0</div>
+        <div class="stat-sub">sur le terrain</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Temps moyen affectation</div>
+        <div class="stat-value" id="meanAffect" style="color:var(--success)">--</div>
+        <div class="stat-sub">objectif &lt; 2 min</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Appels aujourd'hui</div>
+        <div class="stat-value" id="callsToday" style="color:var(--text)">0</div>
+        <div class="stat-sub">total enregistrés</div>
+      </div>
+    </div>
+
+    <!-- Carte -->
+    <div class="map-panel">
+      <div class="map-header">
+        <div>
+          <h2>Carte des incidents actifs</h2>
+          <p>Incidents terminés exclus · Mise à jour automatique</p>
+        </div>
+        <div class="filters">
+          <button class="filter-button active" data-filter="all">Tous</button>
+          <button class="filter-button" data-filter="incendie">🔥 Incendies</button>
+          <button class="filter-button" data-filter="medical">🏥 Médicaux</button>
+          <button class="filter-button" data-filter="accident">🚗 Accidents</button>
+          <button class="filter-button" data-filter="vehicule">🚑 Véhicules</button>
+        </div>
+      </div>
+      <div id="map"></div>
+      <div class="map-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div>En attente</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>En route</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--warning)"></div>Sur place</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--success)"></div>Véhicule disponible</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--grey)"></div>Hors service</div>
+      </div>
+    </div>
+
+    <!-- Listes -->
+    <div class="split-grid">
+      <div class="list-panel">
+        <div class="list-header">
+          <span class="list-title">Incidents actifs</span>
+          <span class="list-count" id="incidentCount">0</span>
+        </div>
+        <ul id="incidentList" class="card-list"></ul>
+      </div>
+      <div class="list-panel">
+        <div class="list-header">
+          <span class="list-title">Véhicules</span>
+          <span class="list-count" id="vehicleCount">0</span>
+        </div>
+        <ul id="vehicleList" class="card-list"></ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal assignation -->
+  <div id="assignModal">
+    <div class="modal">
+      <h4>Assigner un véhicule — Intervention #<span id="modalInterventionId"></span></h4>
+      <label for="vehSelect">Véhicule disponible</label>
+      <select id="vehSelect"></select>
+      <div class="modal-actions">
+        <button id="cancelAssign" class="btn secondary">Annuler</button>
+        <button id="confirmAssign" class="btn primary">Confirmer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/dispatch.js"></script>
+</body>
+</html>

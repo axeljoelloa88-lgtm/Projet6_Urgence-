@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Fiche Intervention — Urgence+</title>
+  <style>
+    :root{
+      --bg:      #05101a;
+      --panel:   #0d1624;
+      --panel2:  #111b2b;
+      --border:  #13213f;
+      --text:    #e8eeff;
+      --muted:   #8ea3c1;
+      --accent:  #3ba3ff;
+      --success: #2ec48a;
+      --warning: #ffbf56;
+      --danger:  #f35f5f;
+      --grey:    #8b94a6;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif;min-height:100vh}
+
+    /* ── Topbar ── */
+    .topbar{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:14px 24px;background:var(--panel);
+      border-bottom:1px solid var(--border);
+      position:sticky;top:0;z-index:100;
+    }
+    .topbar-left{display:flex;align-items:center;gap:12px}
+    .logo{width:34px;height:34px;border-radius:10px;background:var(--danger);display:flex;align-items:center;justify-content:center;font-size:16px}
+    .topbar h1{font-size:1rem;font-weight:600}
+    .topbar p{font-size:.78rem;color:var(--muted);margin-top:2px}
+    .btn-back{
+      background:transparent;border:1px solid var(--border);
+      color:var(--muted);padding:8px 16px;border-radius:999px;
+      cursor:pointer;font-size:.82rem;transition:all .15s;
+    }
+    .btn-back:hover{border-color:var(--accent);color:var(--accent)}
+
+    /* ── Page ── */
+    .page{max-width:1100px;margin:0 auto;padding:20px 24px}
+
+    /* ── Stepper ── */
+    .stepper{
+      display:flex;gap:0;margin-bottom:24px;
+      background:var(--panel);border:1px solid var(--border);
+      border-radius:14px;overflow:hidden;
+    }
+    .tab{
+      flex:1;display:flex;align-items:center;justify-content:center;
+      gap:8px;padding:12px 8px;font-size:.8rem;color:var(--muted);
+      border-right:1px solid var(--border);cursor:default;
+      transition:all .2s;
+    }
+    .tab:last-child{border-right:none}
+    .tab.done{background:#0d1f14;color:var(--success)}
+    .tab.active{background:#0d1f35;color:var(--accent);font-weight:600}
+    .tab-icon{
+      width:22px;height:22px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:.75rem;font-weight:700;flex-shrink:0;
+      background:var(--panel2);color:var(--muted);
+    }
+    .tab.done .tab-icon{background:#0d2a1a;color:var(--success)}
+    .tab.active .tab-icon{background:#0d2040;color:var(--accent)}
+
+    /* ── Grille principale ── */
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:18px}
+
+    /* ── Cards ── */
+    .card{
+      background:var(--panel);border:1px solid var(--border);
+      border-radius:16px;padding:20px;margin-bottom:16px;
+    }
+    .card:last-child{margin-bottom:0}
+    .card-title{
+      font-size:.72rem;color:var(--muted);text-transform:uppercase;
+      letter-spacing:.12em;margin-bottom:14px;
+    }
+    .info-row{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);
+      font-size:.88rem;
+    }
+    .info-row:last-child{border-bottom:none}
+    .info-key{color:var(--muted)}
+    .info-val{color:var(--text);font-weight:500;text-align:right;max-width:60%}
+
+    /* ── Actions ── */
+    .actions{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+    .btn{
+      display:inline-flex;align-items:center;gap:6px;
+      border:none;border-radius:999px;padding:10px 18px;
+      font-size:.85rem;font-weight:600;cursor:pointer;
+      transition:all .2s;
+    }
+    .btn:disabled{opacity:.45;cursor:not-allowed}
+    .btn.primary{background:var(--accent);color:#fff}
+    .btn.primary:hover:not(:disabled){background:#2490e8}
+    .btn.success{background:var(--success);color:#fff}
+    .btn.success:hover:not(:disabled){background:#27a87a}
+    .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
+    .btn.ghost:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+
+    /* ── Timeline ── */
+    .timeline{display:flex;flex-direction:column;gap:0}
+    .event{
+      display:flex;gap:14px;align-items:flex-start;
+      padding:12px 0;border-bottom:1px solid rgba(255,255,255,.04);
+    }
+    .event:last-child{border-bottom:none}
+    .event-dot{
+      width:32px;height:32px;border-radius:50%;
+      background:var(--panel2);border:1px solid var(--border);
+      display:flex;align-items:center;justify-content:center;
+      font-size:14px;flex-shrink:0;margin-top:2px;
+    }
+    .event-body{flex:1}
+    .event-title{font-size:.9rem;font-weight:500;margin-bottom:3px}
+    .event-detail{font-size:.8rem;color:var(--muted);margin-bottom:3px;line-height:1.5}
+    .event-time{font-size:.75rem;color:var(--grey)}
+
+    /* ── Référence ID ── */
+    .int-ref{
+      display:inline-block;background:var(--panel2);
+      color:var(--accent);border:1px solid var(--border);
+      padding:3px 12px;border-radius:6px;font-size:.85rem;
+      font-family:monospace;margin-left:10px;
+    }
+    .subtitle{font-size:.82rem;color:var(--muted);margin-top:5px}
+
+    @media(max-width:820px){
+      .grid{grid-template-columns:1fr}
+      .stepper{flex-wrap:wrap}
+      .tab{min-width:calc(50% - 1px)}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo">🚨</div>
+      <div>
+        <h1>Fiche intervention <span class="int-ref" id="intRef">#INT-0000</span></h1>
+        <p id="subtitle">Chargement...</p>
+      </div>
+    </div>
+    <button id="backBtn" class="btn-back">← Retour dispatch</button>
+  </div>
+
+  <div class="page">
+
+    <!-- Stepper statut -->
+    <div class="stepper" id="statusTabs"></div>
+
+    <div class="grid">
+
+      <!-- Colonne gauche -->
+      <div>
+        <!-- Incident -->
+        <div class="card">
+          <div class="card-title">Incident</div>
+          <div class="info-row">
+            <span class="info-key">Type &amp; Priorité</span>
+            <span class="info-val" id="typeBadge">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-key">Adresse</span>
+            <span class="info-val" id="adresse">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-key">Appelant</span>
+            <span class="info-val" id="appelant">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-key">Heure de l'appel</span>
+            <span class="info-val" id="heureAppel">—</span>
+          </div>
+        </div>
+
+        <!-- Journal -->
+        <div class="card">
+          <div class="card-title">Journal de l'intervention</div>
+          <div id="timeline" class="timeline"></div>
+        </div>
+      </div>
+
+      <!-- Colonne droite -->
+      <div>
+        <!-- Ressources -->
+        <div class="card">
+          <div class="card-title">Ressources assignées</div>
+          <div class="info-row">
+            <span class="info-key">Véhicule</span>
+            <span class="info-val" id="vehiculeName">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-key">Agent</span>
+            <span class="info-val" id="agentName">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-key">Heure affectation</span>
+            <span class="info-val" id="affectTime">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-key">Délai affectation</span>
+            <span class="info-val" id="delay">—</span>
+          </div>
+
+          <!-- Boutons conditionnels selon statut -->
+          <div class="actions">
+            <button id="btnOnScene" class="btn primary" style="display:none">
+              📍 Sur place
+            </button>
+            <button id="btnClose" class="btn success" style="display:none">
+              ✓ Clôturer
+            </button>
+            <button id="btnReport" class="btn ghost" style="display:none">
+              📄 Rapport
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/intervention.js"></script>
+</body>
+</html>

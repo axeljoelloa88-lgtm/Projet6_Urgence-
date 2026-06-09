@@ -10,8 +10,8 @@
 <body>
   <div class="container page-container">
     <header class="header">
-      <h1>Nouvel appel d'urgence</h1>
-      <p>Enregistrez les détails et dispatch l'intervention</p>
+      <h1>Enregistrer un appel</h1>
+      <p>Supervision d'urgence — envoyez rapidement une intervention.</p>
     </header>
 
     <section class="button-group">
@@ -67,12 +67,15 @@
   <div id="map-modal" class="modal hidden">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Sélectionner la localisation</h2>
+        <div>
+          <p class="section-label" style="margin-bottom:8px;">Mode cartographie</p>
+          <h2 style="margin:0;color:#ffffff;">Sélectionner le point</h2>
+        </div>
         <button type="button" class="close-modal" id="close-map">✕</button>
       </div>
       <div id="map" class="map-container"></div>
       <div class="modal-footer">
-        <p id="map-coords" class="map-info"></p>
+        <p id="map-coords" class="map-info">Cliquez sur la carte pour définir la localisation.</p>
         <button type="button" id="confirm-location" class="confirm-button">Confirmer la localisation</button>
       </div>
     </div>

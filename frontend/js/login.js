@@ -44,23 +44,18 @@ form.addEventListener('submit', async (event) => {
     }
 
     const actualRole = result.utilisateur?.role;
-    if (actualRole && actualRole !== selectedRole) {
-      showMessage('Identifiants incorrects', true);
-      return;
-    }
 
     localStorage.setItem('urgenceplus_token', result.token);
     localStorage.setItem('urgenceplus_user', JSON.stringify(result.utilisateur));
     localStorage.setItem('urgenceplus_role', actualRole || selectedRole);
 
-    if (actualRole === 'superviseur') {
-      showMessage('Superviseur connecté : le dashboard n’est pas encore disponible pour le moment.', true);
-      return;
-    }
-
     showMessage('Connexion réussie, redirection...', false);
     setTimeout(() => {
-      window.location.href = '/htlm/appel.html';
+      if (actualRole === 'superviseur') {
+        window.location.href = '/htlm/dispatch.html';
+      } else {
+        window.location.href = '/htlm/appel.html';
+      }
     }, 600);
   } catch (err) {
     showMessage('Erreur réseau, réessayez.', true);

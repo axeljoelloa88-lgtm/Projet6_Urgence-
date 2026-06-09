@@ -16,6 +16,9 @@ app.set('io', io)
 
 app.use('/api/auth',   require('./backend/routes/auth.routes'))
 app.use('/api/appels', require('./backend/routes/appel.routes'))
+app.use('/api/vehicules', require('./backend/routes/vehicule.routes'))
+app.use('/api/interventions', require('./backend/routes/intervention.routes'))
+app.use('/api/utilisateurs', require('./backend/routes/utilisateur.routes'))
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend', 'htlm', 'index.html'))
