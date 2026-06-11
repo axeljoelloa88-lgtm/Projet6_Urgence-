@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dashboard — Urgence+</title>
+  <style>
+    :root{
+      --bg:      #05101a;
+      --panel:   #0d1624;
+      --panel2:  #111b2b;
+      --border:  #13213f;
+      --text:    #e8eeff;
+      --muted:   #8ea3c1;
+      --accent:  #3ba3ff;
+      --success: #2ec48a;
+      --warning: #ffbf56;
+      --danger:  #f35f5f;
+      --grey:    #8b94a6;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif}
+
+    /* ── Layout ── */
+    .page{padding:24px}
+
+    /* ── Header ── */
+    .page-header{
+      display:flex;justify-content:space-between;align-items:center;
+      margin-bottom:24px;flex-wrap:wrap;gap:12px;
+    }
+    .page-header h1{font-size:1.3rem;font-weight:600}
+    .page-header p{font-size:.82rem;color:var(--muted);margin-top:3px}
+    .live-badge{
+      display:flex;align-items:center;gap:6px;
+      background:#0d1f0d;border:1px solid var(--success);
+      color:var(--success);padding:6px 14px;
+      border-radius:999px;font-size:.8rem;
+    }
+    .live-dot{
+      width:8px;height:8px;border-radius:50%;
+      background:var(--success);animation:blink 1.4s infinite;
+    }
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+    /* ── KPI cards ── */
+    .kpi-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:14px;margin-bottom:20px;
+    }
+    .kpi-card{
+      background:var(--panel);border:1px solid var(--border);
+      border-radius:16px;padding:18px 20px;
+      display:flex;flex-direction:column;gap:10px;
+    }
+    .kpi-label{
+      font-size:.72rem;color:var(--muted);
+      text-transform:uppercase;letter-spacing:.1em;
+    }
+    .kpi-value{font-size:2rem;font-weight:700;line-height:1}
+    .kpi-sub{
+      font-size:.75rem;color:var(--muted);
+      display:flex;align-items:center;gap:5px;
+    }
+    .kpi-trend{font-size:.75rem;font-weight:600}
+    .trend-up{color:var(--danger)}
+    .trend-ok{color:var(--success)}
+
+    /* ── Grille principale ── */
+    .main-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;margin-bottom:16px;
+    }
+
+    /* ── Panels ── */
+    .panel{
+      background:var(--panel);border:1px solid var(--border);
+      border-radius:16px;padding:20px;
+    }
+    .panel-title{
+      font-size:.72rem;color:var(--muted);
+      text-transform:uppercase;letter-spacing:.12em;
+      margin-bottom:16px;
+    }
+
+    /* ── Barres de stats ── */
+    .bar-row{
+      display:flex;align-items:center;
+      gap:10px;margin-bottom:10px;
+    }
+    .bar-row:last-child{margin-bottom:0}
+    .bar-label{font-size:.82rem;color:var(--muted);min-width:70px}
+    .bar-track{
+      flex:1;height:7px;background:var(--panel2);
+      border-radius:4px;overflow:hidden;
+    }
+    .bar-fill{height:100%;border-radius:4px;transition:width .6s ease}
+    .bar-val{font-size:.82rem;color:var(--text);min-width:36px;text-align:right}
+
+    /* ── Graphique appels (barres SVG) ── */
+    .chart-wrap{margin-top:4px}
+    .chart-bars{
+      display:flex;align-items:flex-end;
+      gap:6px;height:100px;
+    }
+    .chart-col{
+      display:flex;flex-direction:column;
+      align-items:center;flex:1;gap:5px;
+    }
+    .chart-bar{
+      width:100%;border-radius:4px 4px 0 0;
+      transition:height .5s ease;cursor:pointer;
+      min-height:4px;
+    }
+    .chart-bar:hover{opacity:.8}
+    .chart-day{font-size:.7rem;color:var(--muted)}
+    .chart-val{font-size:.7rem;color:var(--text);font-weight:500}
+
+    /* ── Table interventions ── */
+    .table{width:100%;border-collapse:collapse}
+    .table th{
+      font-size:.7rem;color:var(--muted);
+      text-transform:uppercase;letter-spacing:.08em;
+      padding:8px 10px;border-bottom:1px solid var(--border);
+      text-align:left;font-weight:500;
+    }
+    .table td{
+      padding:10px;border-bottom:1px solid rgba(255,255,255,.03);
+      font-size:.83rem;
+    }
+    .table tr:last-child td{border-bottom:none}
+    .table tr:hover td{background:var(--panel2)}
+    .pill{
+      padding:2px 9px;border-radius:999px;
+      font-size:.72rem;font-weight:600;white-space:nowrap;
+    }
+
+    /* ── Jauge circulaire ── */
+    .gauge-wrap{
+      display:flex;flex-direction:column;
+      align-items:center;gap:12px;padding:8px 0;
+    }
+    .gauge-row{display:flex;gap:24px;justify-content:center;flex-wrap:wrap}
+    .gauge-item{display:flex;flex-direction:column;align-items:center;gap:6px}
+    .gauge-val{font-size:1.4rem;font-weight:700}
+    .gauge-lbl{font-size:.72rem;color:var(--muted);text-align:center}
+
+    /* ── Bottom grid ── */
+    .bottom-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+
+    @media(max-width:1100px){
+      .kpi-grid{grid-template-columns:repeat(2,1fr)}
+      .main-grid{grid-template-columns:1fr}
+      .bottom-grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1>Dashboard superviseur</h1>
+      <p id="lastUpdate">Chargement...</p>
+    </div>
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      Temps réel
+    </div>
+  </div>
+
+  <!-- KPI -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Interventions actives</div>
+      <div class="kpi-value" id="kpiActives" style="color:var(--danger)">—</div>
+      <div class="kpi-sub">
+        <span class="kpi-trend trend-up" id="kpiActivesTrend"></span>
+        en cours right now
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Véhicules disponibles</div>
+      <div class="kpi-value" id="kpiDispo" style="color:var(--success)">—</div>
+      <div class="kpi-sub" id="kpiDispoSub">sur 5 véhicules</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Temps moyen affectation</div>
+      <div class="kpi-value" id="kpiDelai" style="color:var(--accent)">—</div>
+      <div class="kpi-sub">
+        <span class="kpi-trend" id="kpiDelaiTrend"></span>
+        objectif &lt; 2 min
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Appels aujourd'hui</div>
+      <div class="kpi-value" id="kpiAppels" style="color:var(--text)">—</div>
+      <div class="kpi-sub" id="kpiAppelsSub">total enregistrés</div>
+    </div>
+  </div>
+
+  <!-- Grille principale -->
+  <div class="main-grid">
+
+    <!-- Répartition par type -->
+    <div class="panel">
+      <div class="panel-title">Répartition par type d'incident</div>
+      <div id="typeChart"></div>
+    </div>
+
+    <!-- Appels par jour -->
+    <div class="panel">
+      <div class="panel-title">Appels des 7 derniers jours</div>
+      <div class="chart-wrap">
+        <div class="chart-bars" id="weekChart"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom grid -->
+  <div class="bottom-grid">
+
+    <!-- Statut véhicules -->
+    <div class="panel">
+      <div class="panel-title">Statut des véhicules</div>
+      <div id="vehiculeStats"></div>
+    </div>
+
+    <!-- Interventions récentes -->
+    <div class="panel" style="grid-column:span 2">
+      <div class="panel-title">Interventions récentes</div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Réf.</th>
+            <th>Type</th>
+            <th>Adresse</th>
+            <th>Statut</th>
+            <th>Délai affect.</th>
+          </tr>
+        </thead>
+        <tbody id="interventionTable"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/sidebar.js"></script>
+<script src="/js/dashboard.js"></script>
+</body>
+</html>
