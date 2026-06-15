@@ -277,7 +277,7 @@
   })
 
   btnReport.addEventListener('click', () => {
-    alert('Fonction de rapport non implémentée dans cette démo.')
+  window.location.href = '/htlm/rapports.html?intervention_id=' + id
   })
 
   backBtn.addEventListener('click', () => {

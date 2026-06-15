@@ -95,171 +95,308 @@ CREATE INDEX idx_vehicules_statut     ON vehicules(statut);
 
 
 -- ============================================================
---  5. INSERTION — UTILISATEURS
+-- ============================================================
+--  URGENCE+ — Données de test complètes et réalistes
+--  À exécuter APRÈS la création des tables
+--  psql -U postgres -d Projet_6 -f seed_complet.sql
+-- ============================================================
+
+-- Nettoyer les anciennes données
+TRUNCATE rapports, interventions, appels, vehicules, utilisateurs
+  RESTART IDENTITY CASCADE;
+
+
+-- ============================================================
+--  1. UTILISATEURS (3 superviseurs + 6 opérateurs)
 --
---  Mots de passe hashés avec bcrypt (10 rounds)
---  via : bcrypt.hashSync('motdepasse', 10)
---
---  ┌─────────────────────────────┬──────────────────┬─────────────┐
---  │ Email                       │ Mot de passe     │ Rôle        │
---  ├─────────────────────────────┼──────────────────┼─────────────┤
---  │ superviseur@urgence.ca      │ Admin1234        │ superviseur │
---  │ operateur1@urgence.ca       │ Operateur1234    │ operateur   │
---  │ operateur2@urgence.ca       │ Operateur5678    │ operateur   │
---  └─────────────────────────────┴──────────────────┴─────────────┘
+--  Tous les mots de passe : Admin1234
+--  Hash bcrypt 10 rounds
 -- ============================================================
 
 INSERT INTO utilisateurs (nom, email, mot_de_passe, role) VALUES
 
-(
-    'Sophie Tremblay',
-    'superviseur@urgence.ca',
-    -- Mot de passe en clair : Admin1234
-    '$2b$10$LwoIIPuTk18UPBjYLKt7V.qgOUcVHEYv0mYfK8PuJfjmMkGUGd3sG',
-    'superviseur'
-),
+-- Superviseurs
+('Sophie Tremblay',   'superviseur@urgence.ca',    '$2b$10$LwoIIPuTk18UPBjYLKt7V.qgOUcVHEYv0mYfK8PuJfjmMkGUGd3sG', 'superviseur'),
+('Marc Beauchamp',    'superviseur2@urgence.ca',   '$2b$10$LwoIIPuTk18UPBjYLKt7V.qgOUcVHEYv0mYfK8PuJfjmMkGUGd3sG', 'superviseur'),
+('Diane Létourneau',  'superviseur3@urgence.ca',   '$2b$10$LwoIIPuTk18UPBjYLKt7V.qgOUcVHEYv0mYfK8PuJfjmMkGUGd3sG', 'superviseur'),
 
-(
-    'Joel Loa',
-    'operateur1@urgence.ca',
-    -- Mot de passe en clair : Operateur1234
-    '$2b$10$dMNdFGD2LGnPOSh.fp6Oa.zjLD0HXySgmiFCN3rgYPJxMxb8FzvIm',
-    'operateur'
-),
+-- Opérateurs
+('Joel Loa',          'operateur1@urgence.ca',     '$2b$10$LwoIIPuTk18UPBjYLKt7V.qgOUcVHEYv0mYfK8PuJfjmMkGUGd3sG', 'operateur'),
+('Karim Benali',      'operateur2@urgence.ca',     '$2b$10$LwoIIPuTk18UPBjYLKt7V.qgOUcVHEYv0mYfK8PuJfjmMkGUGd3sG', 'operateur'),
+('Isabelle Royer',    'operateur3@urgence.ca',     '$2b$10$LwoIIPuTk18UPBjYLKt7V.qgOUcVHEYv0mYfK8PuJfjmMkGUGd3sG', 'operateur'),
+('Patrick Dumas',     'operateur4@urgence.ca',     '$2b$10$LwoIIPuTk18UPBjYLKt7V.qgOUcVHEYv0mYfK8PuJfjmMkGUGd3sG', 'operateur'),
+('Nadia Kowalski',    'operateur5@urgence.ca',     '$2b$10$LwoIIPuTk18UPBjYLKt7V.qgOUcVHEYv0mYfK8PuJfjmMkGUGd3sG', 'operateur'),
+('François Gagné',    'operateur6@urgence.ca',     '$2b$10$LwoIIPuTk18UPBjYLKt7V.qgOUcVHEYv0mYfK8PuJfjmMkGUGd3sG', 'operateur');
 
-(
-    'Marc Beauchamp',
-    'operateur2@urgence.ca',
-    -- Mot de passe en clair : Operateur5678
-    '$2b$10$0tF8Bo/k8TLbLHnUDfuutur.K7eNltgu.fYo5jlCSLTVlQWjlFNh2',
-    'operateur'
-);
+-- id 1=Sophie, 2=Marc, 3=Diane, 4=Joel, 5=Karim, 6=Isabelle, 7=Patrick, 8=Nadia, 9=François
 
 
 -- ============================================================
---  6. INSERTION — VÉHICULES (5 simulés)
---  Coordonnées GPS : secteur centre-ville de Montréal
+--  2. VÉHICULES (10 véhicules)
 -- ============================================================
 
 INSERT INTO vehicules (nom, immatriculation, type, statut, latitude, longitude) VALUES
-('Ambulance 01',          'AMB-001', 'ambulance',          'disponible',  45.5017, -73.5673),
-('Ambulance 02',          'AMB-002', 'ambulance',          'disponible',  45.5200, -73.5800),
-('Camion Pompier 01',     'POM-001', 'camion_pompier',     'disponible',  45.5088, -73.5540),
-('Camion Pompier 02',     'POM-002', 'camion_pompier',     'disponible',  45.4972, -73.5790),
-('Voiture Patrouille 01', 'PAT-001', 'voiture_patrouille', 'hors_service',45.5150, -73.5700);
+('Ambulance 01',          'AMB-001', 'ambulance',          'disponible',   45.5017, -73.5673),
+('Ambulance 02',          'AMB-002', 'ambulance',          'disponible',   45.5200, -73.5800),
+('Ambulance 03',          'AMB-003', 'ambulance',          'disponible',   45.5320, -73.6100),
+('Camion Pompier 01',     'POM-001', 'camion_pompier',     'disponible',   45.5088, -73.5540),
+('Camion Pompier 02',     'POM-002', 'camion_pompier',     'disponible',   45.4972, -73.5790),
+('Camion Pompier 03',     'POM-003', 'camion_pompier',     'disponible',   45.5150, -73.6050),
+('Voiture Patrouille 01', 'PAT-001', 'voiture_patrouille', 'disponible',   45.5231, -73.5817),
+('Voiture Patrouille 02', 'PAT-002', 'voiture_patrouille', 'disponible',   45.5410, -73.5930),
+('Voiture Patrouille 03', 'PAT-003', 'voiture_patrouille', 'disponible',   45.4890, -73.5610),
+('Voiture Patrouille 04', 'PAT-004', 'voiture_patrouille', 'hors_service', 45.5150, -73.5700);
+
+-- id 1=AMB-001, 2=AMB-002, 3=AMB-003, 4=POM-001, 5=POM-002
+-- id 6=POM-003, 7=PAT-001, 8=PAT-002, 9=PAT-003, 10=PAT-004
 
 
 -- ============================================================
---  7. INSERTION — APPELS DE TEST (5 appels)
+--  3. APPELS (20 appels sur les 30 derniers jours)
 -- ============================================================
 
 INSERT INTO appels
-    (appelant_nom, appelant_tel, description, type_urgence, priorite, latitude, longitude, adresse, statut, operateur_id)
+  (appelant_nom, appelant_tel, description, type_urgence, priorite,
+   latitude, longitude, adresse, statut, operateur_id, "createdAt", "updatedAt")
 VALUES
 
-(
-    'Marie Lefebvre', '514-555-0192',
-    'Incendie dans un appartement au 3e étage. Résidents coincés à l intérieur. Fumée visible depuis la rue.',
-    'incendie', 'critique',
-    45.5161, -73.5791,
-    '1425 rue Sainte-Catherine O, Montréal',
-    'en_traitement', 2
-),
+-- Appels anciens terminés (il y a 20-30 jours)
+('Marie Lefebvre',    '514-555-0101', 'Incendie appartement 3e étage. Résidents coincés. Fumée visible.',
+ 'incendie', 'critique', 45.5161, -73.5791, '1425 rue Sainte-Catherine O, Montréal',
+ 'cloture', 4, NOW()-INTERVAL '28 days', NOW()-INTERVAL '28 days'),
 
-(
-    'Pierre Gagnon', '514-555-0347',
-    'Personne inconsciente sur le trottoir. Respiration faible, ne répond pas.',
-    'medical', 'haute',
-    45.5200, -73.5660,
-    '3481 rue Saint-Denis, Montréal',
-    'en_traitement', 2
-),
+('Pierre Gagnon',     '514-555-0202', 'Personne inconsciente sur trottoir. Respiration faible.',
+ 'medical', 'haute', 45.5200, -73.5660, '3481 rue Saint-Denis, Montréal',
+ 'cloture', 5, NOW()-INTERVAL '25 days', NOW()-INTERVAL '25 days'),
 
-(
-    'Linda Côté', '514-555-0581',
-    'Collision frontale entre deux véhicules. Une personne coincée dans l habitacle.',
-    'accident', 'haute',
-    45.5248, -73.5877,
-    '5400 rue Sherbrooke O, Montréal',
-    'recu', 2
-),
+('Linda Côté',        '514-555-0303', 'Collision frontale. Une personne coincée dans habitacle.',
+ 'accident', 'haute', 45.5248, -73.5877, '5400 rue Sherbrooke O, Montréal',
+ 'cloture', 6, NOW()-INTERVAL '22 days', NOW()-INTERVAL '22 days'),
 
-(
-    'Ahmed Bouali', '514-555-0734',
-    'Odeur de gaz signalée dans le sous-sol de l immeuble. Résidents évacués partiellement.',
-    'autre', 'moyenne',
-    45.5050, -73.5600,
-    '900 boul. De Maisonneuve E, Montréal',
-    'recu', 3
-),
+('Ahmed Bouali',      '514-555-0404', 'Fuite de gaz dans sous-sol immeuble. Résidents évacués.',
+ 'autre', 'haute', 45.5050, -73.5600, '900 boul. De Maisonneuve E, Montréal',
+ 'cloture', 4, NOW()-INTERVAL '20 days', NOW()-INTERVAL '20 days'),
 
-(
-    'Julie Martin', '514-555-0912',
-    'Chute d une personne âgée de 78 ans. Impossible de se relever. Douleur au bassin.',
-    'medical', 'moyenne',
-    45.5300, -73.6100,
-    '77 rue Sherbrooke O, Montréal',
-    'cloture', 3
-);
+('Julie Martin',      '514-555-0505', 'Chute personne âgée 78 ans. Douleur au bassin.',
+ 'medical', 'moyenne', 45.5300, -73.6100, '77 rue Sherbrooke O, Montréal',
+ 'cloture', 5, NOW()-INTERVAL '18 days', NOW()-INTERVAL '18 days'),
+
+-- Appels moyennement anciens (il y a 10-15 jours)
+('Robert Simard',     '514-555-0606', 'Explosion partielle dans garage. Victime brûlures légères.',
+ 'incendie', 'haute', 45.5410, -73.5930, '2200 rue Beaubien E, Montréal',
+ 'cloture', 6, NOW()-INTERVAL '14 days', NOW()-INTERVAL '14 days'),
+
+('Fatima Ouellet',    '514-555-0707', 'Crise cardiaque homme 65 ans. Perd connaissance.',
+ 'medical', 'critique', 45.5088, -73.5540, '1000 rue Sainte-Catherine E, Montréal',
+ 'cloture', 7, NOW()-INTERVAL '12 days', NOW()-INTERVAL '12 days'),
+
+('Jean-François Roy', '514-555-0808', 'Accident motocyclette. Victime au sol, jambe brisée.',
+ 'accident', 'haute', 45.4972, -73.5790, '4500 rue Notre-Dame O, Montréal',
+ 'cloture', 8, NOW()-INTERVAL '10 days', NOW()-INTERVAL '10 days'),
+
+('Sylvie Bergeron',   '514-555-0909', 'Inondation cave suite rupture conduite eau.',
+ 'autre', 'moyenne', 45.5150, -73.6050, '350 rue Laurier O, Montréal',
+ 'cloture', 9, NOW()-INTERVAL '9 days', NOW()-INTERVAL '9 days'),
+
+('Michel Fontaine',   '514-555-1010', 'Enfant de 4 ans avale médicament. Parents paniqués.',
+ 'medical', 'critique', 45.5231, -73.5817, '875 avenue du Parc, Montréal',
+ 'cloture', 4, NOW()-INTERVAL '8 days', NOW()-INTERVAL '8 days'),
+
+-- Appels récents (il y a 3-7 jours)
+('Caroline Tremblay', '514-555-1111', 'Incendie cuisine restaurant. Évacuation en cours.',
+ 'incendie', 'haute', 45.5017, -73.5673, '2050 rue Peel, Montréal',
+ 'cloture', 5, NOW()-INTERVAL '7 days', NOW()-INTERVAL '7 days'),
+
+('Hassan Diallo',     '514-555-1212', 'Homme âgé désorienté dans la rue. Hypoglycémie probable.',
+ 'medical', 'moyenne', 45.5320, -73.6100, '1200 avenue Atwater, Montréal',
+ 'cloture', 6, NOW()-INTERVAL '5 days', NOW()-INTERVAL '5 days'),
+
+('Émilie Bouchard',   '514-555-1313', 'Collision arrière autoroute 40. 3 véhicules impliqués.',
+ 'accident', 'critique', 45.4890, -73.5610, 'Autoroute 40 O, sortie 68, Montréal',
+ 'cloture', 7, NOW()-INTERVAL '4 days', NOW()-INTERVAL '4 days'),
+
+('Daniel Leblanc',    '514-555-1414', 'Personne bloquée dans ascenseur depuis 2h.',
+ 'autre', 'faible', 45.5050, -73.5600, '3333 rue de la Montagne, Montréal',
+ 'cloture', 8, NOW()-INTERVAL '3 days', NOW()-INTERVAL '3 days'),
+
+-- Appels très récents (hier et aujourd'hui) — interventions actives
+('Nathalie Perron',   '514-555-1515', 'Incendie sous-sol immeuble résidentiel. Fumée dans couloirs.',
+ 'incendie', 'critique', 45.5161, -73.5791, '555 rue Wellington, Montréal',
+ 'en_traitement', 4, NOW()-INTERVAL '2 hours', NOW()-INTERVAL '2 hours'),
+
+('Omar Kaddouri',     '514-555-1616', 'Accident vélo vs voiture. Cycliste inconscient casque brisé.',
+ 'accident', 'haute', 45.5200, -73.5660, '1800 rue Rachel E, Montréal',
+ 'en_traitement', 5, NOW()-INTERVAL '90 minutes', NOW()-INTERVAL '90 minutes'),
+
+('Lucie Desrosiers',  '514-555-1717', 'AVC suspected. Femme 70 ans. Difficulté parole et motricité.',
+ 'medical', 'critique', 45.5248, -73.5877, '2900 boul. Édouard-Montpetit, Montréal',
+ 'en_traitement', 6, NOW()-INTERVAL '45 minutes', NOW()-INTERVAL '45 minutes'),
+
+-- Appels reçus non dispatchés (maintenant)
+('Jean Kouassi',      '514-880-3650', 'Vol à l étalage avec altercation physique au IGA.',
+ 'autre', 'moyenne', 45.5410, -73.5930, '825 rue Saint-Laurent O, Longueuil',
+ 'recu', 7, NOW()-INTERVAL '8 minutes', NOW()-INTERVAL '8 minutes'),
+
+('Aïcha Touré',       '514-555-1919', 'Enfant de 7 ans disparu. Vu pour la dernière fois parc Lafontaine.',
+ 'autre', 'haute', 45.5231, -73.5817, 'Parc Lafontaine, Montréal',
+ 'recu', 8, NOW()-INTERVAL '3 minutes', NOW()-INTERVAL '3 minutes'),
+
+('Bruno Marchand',    '514-555-2020', 'Homme menaçant avec couteau devant dépanneur.',
+ 'autre', 'critique', 45.5017, -73.5673, '4200 rue Saint-Denis, Montréal',
+ 'recu', 9, NOW()-INTERVAL '1 minute', NOW()-INTERVAL '1 minute');
 
 
 -- ============================================================
---  8. INSERTION — INTERVENTIONS DE TEST
+--  4. INTERVENTIONS (17 interventions)
 -- ============================================================
 
 INSERT INTO interventions
-    (statut, date_debut, date_fin, notes, appel_id, vehicule_id, agent_id)
+  (statut, date_debut, date_fin, notes, appel_id, vehicule_id, agent_id, "createdAt", "updatedAt")
 VALUES
 
-(
-    'en_route',
-    NOW() - INTERVAL '5 minutes', NULL,
-    'Départ immédiat. Trafic fluide sur Ste-Catherine.',
-    1, 3, 2    -- appel #1, Camion Pompier 01, Joel
-),
+-- Interventions terminées anciennes
+('termine', NOW()-INTERVAL '28 days'+INTERVAL '90 seconds', NOW()-INTERVAL '28 days'+INTERVAL '35 minutes',
+ 'Incendie maîtrisé. 2 résidents évacués. Aucune victime.', 1, 4, 4,
+ NOW()-INTERVAL '28 days', NOW()-INTERVAL '28 days'+INTERVAL '35 minutes'),
 
-(
-    'sur_place',
-    NOW() - INTERVAL '12 minutes', NULL,
-    'Patient stabilisé. Transfert vers CHUM en cours.',
-    2, 1, 2    -- appel #2, Ambulance 01, Joel
-),
+('termine', NOW()-INTERVAL '25 days'+INTERVAL '75 seconds', NOW()-INTERVAL '25 days'+INTERVAL '22 minutes',
+ 'Patient stabilisé. Transport CHUM effectué.', 2, 1, 5,
+ NOW()-INTERVAL '25 days', NOW()-INTERVAL '25 days'+INTERVAL '22 minutes'),
 
-(
-    'en_attente',
-    NULL, NULL,
-    NULL,
-    3, NULL, 3  -- appel #3, pas encore assigné, Marc
-),
+('termine', NOW()-INTERVAL '22 days'+INTERVAL '85 seconds', NOW()-INTERVAL '22 days'+INTERVAL '48 minutes',
+ 'Victime désincarcérée. Transport Hôpital Général.', 3, 7, 6,
+ NOW()-INTERVAL '22 days', NOW()-INTERVAL '22 days'+INTERVAL '48 minutes'),
 
-(
-    'termine',
-    NOW() - INTERVAL '50 minutes',
-    NOW() - INTERVAL '20 minutes',
-    'Intervention terminée sans complication. Patient transporté à l Hôpital Général.',
-    5, 2, 3    -- appel #5, Ambulance 02, Marc
-);
+('termine', NOW()-INTERVAL '20 days'+INTERVAL '95 seconds', NOW()-INTERVAL '20 days'+INTERVAL '30 minutes',
+ 'Fuite colmatée par équipe technique. Zone sécurisée.', 4, 9, 4,
+ NOW()-INTERVAL '20 days', NOW()-INTERVAL '20 days'+INTERVAL '30 minutes'),
+
+('termine', NOW()-INTERVAL '18 days'+INTERVAL '80 seconds', NOW()-INTERVAL '18 days'+INTERVAL '25 minutes',
+ 'Patiente transportée à l Hôpital Général. Aucune fracture.', 5, 2, 5,
+ NOW()-INTERVAL '18 days', NOW()-INTERVAL '18 days'+INTERVAL '25 minutes'),
+
+('termine', NOW()-INTERVAL '14 days'+INTERVAL '70 seconds', NOW()-INTERVAL '14 days'+INTERVAL '40 minutes',
+ 'Victime brûlures légères soignée sur place. Refus transport.', 6, 4, 6,
+ NOW()-INTERVAL '14 days', NOW()-INTERVAL '14 days'+INTERVAL '40 minutes'),
+
+('termine', NOW()-INTERVAL '12 days'+INTERVAL '65 seconds', NOW()-INTERVAL '12 days'+INTERVAL '18 minutes',
+ 'RCR administré. Rythme cardiaque rétabli. Transport ICM.', 7, 1, 7,
+ NOW()-INTERVAL '12 days', NOW()-INTERVAL '12 days'+INTERVAL '18 minutes'),
+
+('termine', NOW()-INTERVAL '10 days'+INTERVAL '90 seconds', NOW()-INTERVAL '10 days'+INTERVAL '55 minutes',
+ 'Victime fracture tibia. Immobilisation et transport hôpital.', 8, 7, 8,
+ NOW()-INTERVAL '10 days', NOW()-INTERVAL '10 days'+INTERVAL '55 minutes'),
+
+('termine', NOW()-INTERVAL '9 days'+INTERVAL '100 seconds', NOW()-INTERVAL '9 days'+INTERVAL '60 minutes',
+ 'Plombier municipal contacté. Eau coupée. Zone nettoyée.', 9, 9, 9,
+ NOW()-INTERVAL '9 days', NOW()-INTERVAL '9 days'+INTERVAL '60 minutes'),
+
+('termine', NOW()-INTERVAL '8 days'+INTERVAL '55 seconds', NOW()-INTERVAL '8 days'+INTERVAL '15 minutes',
+ 'Enfant transporté urgence pédiatrique CHU. Hors danger.', 10, 2, 4,
+ NOW()-INTERVAL '8 days', NOW()-INTERVAL '8 days'+INTERVAL '15 minutes'),
+
+('termine', NOW()-INTERVAL '7 days'+INTERVAL '75 seconds', NOW()-INTERVAL '7 days'+INTERVAL '45 minutes',
+ 'Incendie cuisine éteint. Restaurateur averti. 0 blessé.', 11, 5, 5,
+ NOW()-INTERVAL '7 days', NOW()-INTERVAL '7 days'+INTERVAL '45 minutes'),
+
+('termine', NOW()-INTERVAL '5 days'+INTERVAL '85 seconds', NOW()-INTERVAL '5 days'+INTERVAL '20 minutes',
+ 'Patient stabilisé glucagon administré. Transport refusé.', 12, 1, 6,
+ NOW()-INTERVAL '5 days', NOW()-INTERVAL '5 days'+INTERVAL '20 minutes'),
+
+('termine', NOW()-INTERVAL '4 days'+INTERVAL '95 seconds', NOW()-INTERVAL '4 days'+INTERVAL '70 minutes',
+ '3 blessés légers. 1 blessé grave transport trauma center.', 13, 4, 7,
+ NOW()-INTERVAL '4 days', NOW()-INTERVAL '4 days'+INTERVAL '70 minutes'),
+
+('termine', NOW()-INTERVAL '3 days'+INTERVAL '110 seconds', NOW()-INTERVAL '3 days'+INTERVAL '28 minutes',
+ 'Technicien ascenseur contacté. Personne libérée indemne.', 14, 9, 8,
+ NOW()-INTERVAL '3 days', NOW()-INTERVAL '3 days'+INTERVAL '28 minutes'),
+
+-- Interventions actives (aujourd'hui)
+('en_route',
+ NOW()-INTERVAL '2 hours'+INTERVAL '95 seconds', NULL,
+ 'Départ immédiat. Renforts demandés.', 15, 5, 4,
+ NOW()-INTERVAL '2 hours', NOW()-INTERVAL '2 hours'+INTERVAL '95 seconds'),
+
+('sur_place',
+ NOW()-INTERVAL '90 minutes'+INTERVAL '80 seconds', NULL,
+ 'Cycliste pris en charge. Signes vitaux stables.', 16, 7, 5,
+ NOW()-INTERVAL '90 minutes', NOW()-INTERVAL '90 minutes'+INTERVAL '80 seconds'),
+
+('en_route',
+ NOW()-INTERVAL '45 minutes'+INTERVAL '70 seconds', NULL,
+ 'Suspicion AVC. Protocole activé.', 17, 3, 6,
+ NOW()-INTERVAL '45 minutes', NOW()-INTERVAL '45 minutes'+INTERVAL '70 seconds');
+
+-- Mettre les véhicules actifs en mission
+UPDATE vehicules SET statut = 'en_mission' WHERE id IN (5, 7, 3);
 
 
 -- ============================================================
---  9. INSERTION — RAPPORT DE TEST
+--  5. RAPPORTS (14 rapports pour les interventions terminées)
 -- ============================================================
 
-INSERT INTO rapports (titre, contenu, intervention_id, auteur_id)
-VALUES (
-    'Rapport INT-004 — Chute personne âgée Sherbrooke',
-    'Intervention réalisée au 77 rue Sherbrooke O. '
-    'Patiente Mme Julie Martin, 78 ans, chute dans salle de bain. '
-    'Prise en charge en 9 minutes. '
-    'Aucune fracture confirmée sur place. '
-    'Transport vers Hôpital Général de Montréal effectué à 13h45. '
-    'Dossier clos.',
-    4, 1    -- intervention #4, auteur : Sophie Tremblay (superviseure)
-);
+INSERT INTO rapports (titre, contenu, intervention_id, auteur_id, "createdAt", "updatedAt")
+VALUES
+
+('Rapport INT-0001 — Incendie Sainte-Catherine',
+ E'ÉTAT SUR PLACE:\nFumée dense au 3e étage. Deux résidents bloqués dans couloir.\n\nACTIONS EFFECTUÉES:\nÉvacuation des résidents par échelle. Lance incendie déployée. Feu maîtrisé en 25 minutes.\n\nRÉSULTAT:\nAucune victime. Dommages matériels importants au 3e étage. Rapport remis à la prévention.\n\nNOTES SUPPLÉMENTAIRES:\nCause probable: court-circuit électrique. Enquête ouverte.',
+ 1, 1, NOW()-INTERVAL '28 days'+INTERVAL '40 minutes', NOW()-INTERVAL '28 days'+INTERVAL '40 minutes'),
+
+('Rapport INT-0002 — Personne inconsciente Saint-Denis',
+ E'ÉTAT SUR PLACE:\nHomme d environ 45 ans inconscient sur trottoir. Pouls faible. Odeur d alcool.\n\nACTIONS EFFECTUÉES:\nMise en position latérale de sécurité. Oxygène administré. Monitoring cardiaque.\n\nRÉSULTAT:\nPatient transporté au CHUM. Pronostic favorable selon urgentiste.\n\nNOTES SUPPLÉMENTAIRES:\nIdentité inconnue. Document transmis à la police.',
+ 2, 1, NOW()-INTERVAL '25 days'+INTERVAL '25 minutes', NOW()-INTERVAL '25 days'+INTERVAL '25 minutes'),
+
+('Rapport INT-0003 — Collision Sherbrooke Ouest',
+ E'ÉTAT SUR PLACE:\nCollision frontale haute vitesse. Conducteur coincé. Passager sorti seul.\n\nACTIONS EFFECTUÉES:\nDésincarcération avec matériel hydraulique. 30 minutes d opération. Immobilisation cervicale.\n\nRÉSULTAT:\nVictime principale: traumatisme thoracique, transport Hôpital Général. Passager: choc émotionnel, refus transport.\n\nNOTES SUPPLÉMENTAIRES:\nPolice sur place. Présumé excès de vitesse.',
+ 3, 2, NOW()-INTERVAL '22 days'+INTERVAL '50 minutes', NOW()-INTERVAL '22 days'+INTERVAL '50 minutes'),
+
+('Rapport INT-0004 — Fuite de gaz Maisonneuve',
+ E'ÉTAT SUR PLACE:\nOdeur de gaz dans sous-sol. Compteur gazier défectueux. Bâtiment partiellement évacué.\n\nACTIONS EFFECTUÉES:\nZone sécurisée 50m. Gazoduc municipal avisé. Ventilation forcée du sous-sol.\n\nRÉSULTAT:\nFuite colmatée par techniciens Énergir. Résidents réintégrés après 3h. Aucun blessé.\n\nNOTES SUPPLÉMENTAIRES:\nCompteur remplacé. Rapport transmis à Énergir.',
+ 4, 2, NOW()-INTERVAL '20 days'+INTERVAL '35 minutes', NOW()-INTERVAL '20 days'+INTERVAL '35 minutes'),
+
+('Rapport INT-0005 — Chute personne âgée Sherbrooke',
+ E'ÉTAT SUR PLACE:\nPatiente Mme Julie Martin, 78 ans, chute dans salle de bain. Impossible de se relever.\n\nACTIONS EFFECTUÉES:\nExamen clinique sur place. Aucun signe de fracture visible. Aide au relevé et stabilisation.\n\nRÉSULTAT:\nTransport vers Hôpital Général de Montréal à 13h45 pour radio précaution. Dossier clos.\n\nNOTES SUPPLÉMENTAIRES:\nFamille avisée. Service d aide à domicile recommandé.',
+ 5, 1, NOW()-INTERVAL '18 days'+INTERVAL '30 minutes', NOW()-INTERVAL '18 days'+INTERVAL '30 minutes'),
+
+('Rapport INT-0006 — Explosion garage Beaubien',
+ E'ÉTAT SUR PLACE:\nExplosion partielle bidon essence. Propriétaire avec brûlures mains et avant-bras.\n\nACTIONS EFFECTUÉES:\nRefroidissement brûlures eau froide 15 minutes. Pansements stériles appliqués. Garage ventilé.\n\nRÉSULTAT:\nVictime refuse transport. Soins prodigués sur place. Recommandation consultation médicale dans 24h.\n\nNOTES SUPPLÉMENTAIRES:\nBrûlures 2e degré superficiel. Fiche remise au patient.',
+ 6, 3, NOW()-INTERVAL '14 days'+INTERVAL '45 minutes', NOW()-INTERVAL '14 days'+INTERVAL '45 minutes'),
+
+('Rapport INT-0007 — Arrêt cardiaque Sainte-Catherine Est',
+ E'ÉTAT SUR PLACE:\nM. Hakim Belkacem, 65 ans, effondré devant épicerie. Absence de pouls à l arrivée.\n\nACTIONS EFFECTUÉES:\nRCR démarré immédiatement. DEA utilisé, 2 chocs administrés. Rythme sinusal rétabli après 8 minutes.\n\nRÉSULTAT:\nPatient transporté d urgence à l Institut de Cardiologie de Montréal. Pronostic réservé mais stable.\n\nNOTES SUPPLÉMENTAIRES:\nTémoin avait commencé RCR avant arrivée équipe. A contribué au succès.',
+ 7, 1, NOW()-INTERVAL '12 days'+INTERVAL '20 minutes', NOW()-INTERVAL '12 days'+INTERVAL '20 minutes'),
+
+('Rapport INT-0008 — Accident motocyclette Notre-Dame',
+ E'ÉTAT SUR PLACE:\nMotocycliste éjecté après collision avec VUS. Casque brisé. Inconscient à l arrivée.\n\nACTIONS EFFECTUÉES:\nImmobilisation cervicale. Voie IV posée. Monitoring constantes. Extraction sécurisée.\n\nRÉSULTAT:\nFracture tibia gauche confirmée. Possible traumatisme crânien léger. Transport Hôpital Sacré-Coeur.\n\nNOTES SUPPLÉMENTAIRES:\nConducteur VUS arrêté par police. Alcootest positif.',
+ 8, 2, NOW()-INTERVAL '10 days'+INTERVAL '60 minutes', NOW()-INTERVAL '10 days'+INTERVAL '60 minutes'),
+
+('Rapport INT-0009 — Inondation Laurier Ouest',
+ E'ÉTAT SUR PLACE:\nRupture conduite eau principale. Cave inondée 40cm. Chauffe-eau et électroménagers endommagés.\n\nACTIONS EFFECTUÉES:\nCoupure eau principale immeuble. Contact Service Eaux Ville de Montréal. Pompe de drainage déployée.\n\nRÉSULTAT:\nEau évacuée en 45 minutes. Plombier municipal pris en charge. Résidents relogés temporairement.\n\nNOTES SUPPLÉMENTAIRES:\nDommages estimés 15 000$. Réclamation assurance conseillée.',
+ 9, 3, NOW()-INTERVAL '9 days'+INTERVAL '65 minutes', NOW()-INTERVAL '9 days'+INTERVAL '65 minutes'),
+
+('Rapport INT-0010 — Ingestion médicaments enfant',
+ E'ÉTAT SUR PLACE:\nGarçon 4 ans, ingestion inconnue comprimés mère. Conscient, agité. Pas de symptômes immédiats.\n\nACTIONS EFFECTUÉES:\nContact Centre antipoison Québec. Identification médicament: antihypertenseur. Surveillance constantes.\n\nRÉSULTAT:\nTransport urgent CHU Sainte-Justine. Prise en charge pédiatrique immédiate. Hors danger après 3h observation.\n\nNOTES SUPPLÉMENTAIRES:\nParents sensibilisés rangement médicaments hors portée enfants.',
+ 10, 1, NOW()-INTERVAL '8 days'+INTERVAL '18 minutes', NOW()-INTERVAL '8 days'+INTERVAL '18 minutes'),
+
+('Rapport INT-0011 — Incendie cuisine restaurant Peel',
+ E'ÉTAT SUR PLACE:\nFeu de friteuse cuisine. Système sprinkler activé partiellement. Personnel évacué.\n\nACTIONS EFFECTUÉES:\nExtinction CO2 pour feu gras. Ventilation forcée. Inspection structure post-incendie.\n\nRÉSULTAT:\nFeu éteint en 12 minutes. Aucun blessé. Dommages cuisine estimés 8 000$. Restaurant fermé 48h.\n\nNOTES SUPPLÉMENTAIRES:\nDernier entretien extincteurs: 3 ans. Recommandation mise à jour équipement.',
+ 11, 2, NOW()-INTERVAL '7 days'+INTERVAL '50 minutes', NOW()-INTERVAL '7 days'+INTERVAL '50 minutes'),
+
+('Rapport INT-0012 — Hypoglycémie Atwater',
+ E'ÉTAT SUR PLACE:\nM. André Bissonnette, 72 ans, désorienté, sudations importantes, glycémie 2.1 mmol/L.\n\nACTIONS EFFECTUÉES:\nAdministration glucagon IM. Jus sucré administré per os après récupération partielle. Monitoring 20 min.\n\nRÉSULTAT:\nGlycémie remontée à 5.8 mmol/L. Patient alerte et orienté. Refuse transport. Famille contactée.\n\nNOTES SUPPLÉMENTAIRES:\nDiabétique type 1. Médecin traitant avisé. Ajustement insuline recommandé.',
+ 12, 3, NOW()-INTERVAL '5 days'+INTERVAL '25 minutes', NOW()-INTERVAL '5 days'+INTERVAL '25 minutes'),
+
+('Rapport INT-0013 — Accident A40 multiple',
+ E'ÉTAT SUR PLACE:\nCaïnot arrière à haute vitesse. 3 véhicules impliqués. 1 blessé grave, 2 légers.\n\nACTIONS EFFECTUÉES:\nTriage sur place. Blessé grave: thorax instable, intubation sur place. Les 2 autres: soins mineurs.\n\nRÉSULTAT:\nBlessé critique transport trauma center Hôpital du Sacré-Coeur. 2 autres refusent transport.\nAutoroute fermée 2h le temps des opérations.\n\nNOTES SUPPLÉMENTAIRES:\nEnquête collision ouverte. Neige verglaçante signalée ce jour.',
+ 13, 1, NOW()-INTERVAL '4 days'+INTERVAL '75 minutes', NOW()-INTERVAL '4 days'+INTERVAL '75 minutes'),
+
+('Rapport INT-0014 — Personne bloquée ascenseur',
+ E'ÉTAT SUR PLACE:\nMme Carole Dupont, 55 ans, bloquée ascenseur depuis 2h10. Anxieuse mais en bonne santé.\n\nACTIONS EFFECTUÉES:\nContact avec technicien Otis via gestionnaire immeuble. Communication rassurante maintenue avec victime.\n\nRÉSULTAT:\nPersonne libérée en 18 minutes après arrivée technicien. Aucun soin requis. Refus transport.\n\nNOTES SUPPLÉMENTAIRES:\nAscenseur mis hors service pour inspection. Dernier entretien: 14 mois.',
+ 14, 2, NOW()-INTERVAL '3 days'+INTERVAL '30 minutes', NOW()-INTERVAL '3 days'+INTERVAL '30 minutes');
 
 
 -- ============================================================
---  10. VÉRIFICATION — Résumé des données insérées
+--  6. VÉRIFICATION FINALE
 -- ============================================================
 
 SELECT 'utilisateurs'  AS table_name, COUNT(*) AS total FROM utilisateurs  UNION ALL
@@ -267,3 +404,20 @@ SELECT 'vehicules',                   COUNT(*)           FROM vehicules      UNI
 SELECT 'appels',                      COUNT(*)           FROM appels         UNION ALL
 SELECT 'interventions',               COUNT(*)           FROM interventions  UNION ALL
 SELECT 'rapports',                    COUNT(*)           FROM rapports;
+
+SELECT
+  '✅ Interventions actives'  AS info,
+  COUNT(*) AS total
+FROM interventions WHERE statut != 'termine'
+UNION ALL
+SELECT
+  '✅ Interventions terminées', COUNT(*)
+FROM interventions WHERE statut = 'termine'
+UNION ALL
+SELECT
+  '✅ Appels non dispatchés', COUNT(*)
+FROM appels WHERE statut = 'recu'
+UNION ALL
+SELECT
+  '✅ Rapports générés', COUNT(*)
+FROM rapports;
