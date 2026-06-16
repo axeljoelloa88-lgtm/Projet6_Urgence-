@@ -1,3 +1,16 @@
+// Afficher le nom de l'opérateur
+const user = JSON.parse(localStorage.getItem('urgenceplus_user') || '{}')
+const nomEl = document.getElementById('operateur-nom')
+if (nomEl && user.nom) nomEl.textContent = user.nom
+
+// Bouton déconnexion
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  localStorage.removeItem('urgenceplus_token')
+  localStorage.removeItem('urgenceplus_user')
+  localStorage.removeItem('urgenceplus_role')
+  window.location.href = '/htlm/index.html'
+})
+
 const token = localStorage.getItem('urgenceplus_token');
 const appelForm = document.getElementById('appel-form');
 const typeButtons = document.querySelectorAll('#type-buttons .option-button');

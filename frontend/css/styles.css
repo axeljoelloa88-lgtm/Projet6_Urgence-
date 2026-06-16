@@ -273,3 +273,38 @@ textarea {
   font-size: 1rem;
   font-weight: 500;
 }
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.operateur-nom {
+  font-size: 0.85rem;
+  color: #b0b8cb;
+}
+
+.logout-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #b0b8cb;
+  padding: 8px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  transition: all 0.15s;
+}
+
+.logout-btn:hover {
+  border-color: #f35f5f;
+  color: #f35f5f;
+}
