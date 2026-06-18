@@ -4,96 +4,133 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Dispatch — Urgence+</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
     :root{
-      --bg:       #05101a;
-      --panel:    #0d1624;
-      --panel2:   #111b2b;
-      --border:   #13213f;
-      --text:     #e8eeff;
-      --muted:    #8ea3c1;
-      --accent:   #3ba3ff;   /* bleu — couleur principale */
-      --success:  #2ec48a;   /* vert  — disponible        */
-      --warning:  #ffbf56;   /* jaune — sur place         */
-      --danger:   #f35f5f;   /* rouge — critique/attente  */
-      --grey:     #8b94a6;   /* gris  — hors service      */
+      --bg:       #030810;
+      --panel:    #0a1628;
+      --panel2:   #0f1e36;
+      --border:   rgba(255,255,255,.07);
+      --text:     #f1f5f9;
+      --muted:    #64748b;
+      --accent:   #3b82f6;
+      --success:  #10b981;
+      --warning:  #f59e0b;
+      --danger:   #ef4444;
+      --grey:     #64748b;
     }
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:Inter,system-ui,Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    body{
+      font-family:Inter,system-ui,sans-serif;
+      background:var(--bg);color:var(--text);
+      min-height:100vh;
+      -webkit-font-smoothing:antialiased;
+    }
 
-    /* ── Topbar ── */
-    .topbar{
+    /* ── Animations ── */
+    @keyframes fadeInUp{
+      from{opacity:0;transform:translateY(12px)}
+      to  {opacity:1;transform:translateY(0)}
+    }
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+    /* ── Sub-header (inside page-content, after sidebar) ── */
+    .subheader{
       display:flex;justify-content:space-between;align-items:center;
-      padding:16px 24px;border-bottom:1px solid var(--border);
-      background:var(--panel);position:sticky;top:0;z-index:100;
+      padding:14px 24px;
+      background:var(--panel);
+      border-bottom:1px solid var(--border);
+      position:sticky;top:0;z-index:100;
+      animation:fadeInUp .35s ease both;
     }
-    .topbar-left{display:flex;align-items:center;gap:12px}
-    .logo{
-      width:36px;height:36px;border-radius:10px;
-      background:var(--danger);display:flex;align-items:center;
-      justify-content:center;font-size:18px;
-    }
-    .topbar h1{font-size:1.1rem;font-weight:600}
-    .topbar p{font-size:.8rem;color:var(--muted);margin-top:2px}
+    .subheader h1{font-size:1rem;font-weight:600;letter-spacing:-.01em}
+    .subheader p{font-size:.78rem;color:var(--muted);margin-top:2px}
     .live-badge{
       display:flex;align-items:center;gap:6px;
-      background:#0d1f0d;border:1px solid var(--success);
-      color:var(--success);padding:6px 12px;border-radius:999px;font-size:.8rem;
+      background:rgba(16,185,129,.07);
+      border:1px solid rgba(16,185,129,.25);
+      color:var(--success);
+      padding:6px 12px;border-radius:999px;font-size:.8rem;font-weight:500;
     }
-    .live-dot{width:8px;height:8px;border-radius:50%;background:var(--success);animation:blink 1.4s infinite}
-    @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+    .live-dot{width:7px;height:7px;border-radius:50%;background:var(--success);animation:blink 1.4s infinite}
 
     /* ── Layout ── */
     .page{padding:20px 24px;max-width:1400px;margin:0 auto}
 
     /* ── Stats ── */
-    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+    .stats-row{
+      display:grid;grid-template-columns:repeat(4,1fr);
+      gap:16px;margin-bottom:20px;
+    }
     .stat-card{
       background:var(--panel);border:1px solid var(--border);
       border-radius:16px;padding:18px 20px;
+      animation:fadeInUp .4s ease both;
+      transition:border-color .2s, box-shadow .2s;
     }
-    .stat-label{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
-    .stat-value{font-size:1.9rem;font-weight:700;margin-top:8px}
-    .stat-sub{font-size:.78rem;color:var(--muted);margin-top:4px}
+    .stat-card:hover{border-color:rgba(255,255,255,.12);box-shadow:0 8px 24px rgba(0,0,0,.2)}
+    .stat-card:nth-child(1){animation-delay:.05s}
+    .stat-card:nth-child(2){animation-delay:.1s}
+    .stat-card:nth-child(3){animation-delay:.15s}
+    .stat-card:nth-child(4){animation-delay:.2s}
+    .stat-label{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-weight:500}
+    .stat-value{font-size:1.9rem;font-weight:700;margin-top:8px;line-height:1}
+    .stat-sub{font-size:.78rem;color:var(--muted);margin-top:6px}
 
     /* ── Carte ── */
     .map-panel{
       background:var(--panel);border:1px solid var(--border);
       border-radius:20px;padding:20px;margin-bottom:20px;
+      animation:fadeInUp .4s .25s ease both;
+      transition:border-color .2s;
     }
-    .map-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;gap:12px}
+    .map-panel:hover{border-color:rgba(255,255,255,.1)}
+    .map-header{
+      display:flex;justify-content:space-between;align-items:flex-start;
+      margin-bottom:14px;flex-wrap:wrap;gap:12px;
+    }
     .map-header h2{font-size:1rem;font-weight:600}
-    .map-header p{font-size:.8rem;color:var(--muted);margin-top:3px}
-    .filters{display:flex;gap:8px;flex-wrap:wrap}
+    .map-header p{font-size:.78rem;color:var(--muted);margin-top:3px}
+    .filters{display:flex;gap:6px;flex-wrap:wrap}
     .filter-button{
       background:var(--panel2);color:var(--muted);
-      padding:7px 14px;border:1px solid var(--border);
-      border-radius:999px;cursor:pointer;font-size:.82rem;transition:all .15s;
+      padding:6px 13px;
+      border:1px solid var(--border);
+      border-radius:999px;cursor:pointer;font-size:.8rem;font-family:inherit;
+      font-weight:500;
+      transition:all .15s;
     }
-    .filter-button:hover{border-color:var(--accent);color:var(--text)}
+    .filter-button:hover{border-color:rgba(59,130,246,.35);color:var(--text)}
     .filter-button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
     #map{height:400px;border-radius:14px;overflow:hidden;border:1px solid var(--border)}
 
-    /* ── Légende carte ── */
+    /* ── Légende ── */
     .map-legend{
       display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;
-      font-size:.78rem;color:var(--muted);
+      font-size:.76rem;color:var(--muted);
     }
     .legend-item{display:flex;align-items:center;gap:6px}
-    .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+    .legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
 
     /* ── Listes ── */
     .split-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
     .list-panel{
       background:var(--panel);border:1px solid var(--border);
       border-radius:16px;overflow:hidden;
+      animation:fadeInUp .4s ease both;
+      transition:border-color .2s;
     }
+    .list-panel:hover{border-color:rgba(255,255,255,.1)}
+    .split-grid .list-panel:nth-child(1){animation-delay:.35s}
+    .split-grid .list-panel:nth-child(2){animation-delay:.4s}
+
     .list-header{
       padding:14px 18px;border-bottom:1px solid var(--border);
       display:flex;justify-content:space-between;align-items:center;
     }
-    .list-title{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+    .list-title{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-weight:500}
     .list-count{
       font-size:.75rem;background:var(--panel2);
       color:var(--accent);padding:3px 10px;border-radius:999px;
@@ -101,24 +138,30 @@
     }
     .card-list{list-style:none}
     .card-item{
-      padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.04);
+      padding:14px 18px;
+      border-bottom:1px solid rgba(255,255,255,.04);
       transition:background .15s;
     }
     .card-item:last-child{border-bottom:none}
     .card-item:hover{background:var(--panel2)}
-    .card-item strong{display:block;font-size:.9rem;margin-bottom:5px}
+    .card-item strong{display:block;font-size:.88rem;margin-bottom:5px}
     .item-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-    .pill{padding:2px 9px;border-radius:999px;font-size:.75rem;font-weight:500}
-    .empty-state{padding:24px 18px;color:var(--muted);font-style:italic;font-size:.88rem;text-align:center}
+    .pill{padding:2px 9px;border-radius:999px;font-size:.72rem;font-weight:600}
+    .empty-state{
+      padding:28px 18px;color:var(--muted);
+      font-style:italic;font-size:.88rem;text-align:center;
+    }
 
     /* ── Boutons ── */
     .btn{
       border:none;border-radius:999px;padding:8px 16px;
-      font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s;
+      font-size:.82rem;font-weight:600;cursor:pointer;
+      font-family:inherit;
+      transition:all .18s;display:inline-flex;align-items:center;gap:6px;
     }
-    .btn:disabled{opacity:.45;cursor:not-allowed}
+    .btn:disabled{opacity:.4;cursor:not-allowed}
     .btn.primary{background:var(--accent);color:#fff}
-    .btn.primary:hover:not(:disabled){background:#2490e8}
+    .btn.primary:hover:not(:disabled){background:#2563eb}
     .btn.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border)}
     .btn.secondary:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
     .btn.assigned{background:transparent;color:var(--success);border:1px solid var(--success);opacity:.6}
@@ -127,29 +170,40 @@
     #assignModal{
       position:fixed;inset:0;display:none;
       align-items:center;justify-content:center;
-      background:rgba(0,0,0,.6);z-index:9999;padding:20px;
+      background:rgba(0,0,0,.7);
+      backdrop-filter:blur(4px);
+      z-index:9999;padding:20px;
     }
     .modal{
-      background:#0d1724;border:1px solid var(--border);
+      background:var(--panel);border:1px solid var(--border);
       border-radius:20px;padding:28px;width:min(480px,100%);
+      animation:scaleIn .25s cubic-bezier(.22,1,.36,1) both;
+      box-shadow:0 32px 80px rgba(0,0,0,.5);
     }
-    .modal h4{margin:0 0 20px;font-size:1rem;color:#fff}
-    .modal label{display:block;color:var(--muted);font-size:.8rem;margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em}
+    @keyframes scaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+    .modal h4{margin:0 0 20px;font-size:1rem;color:#fff;font-weight:600}
+    .modal label{
+      display:block;color:var(--muted);font-size:.75rem;
+      margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em;
+    }
     .modal select{
-      width:100%;padding:12px 14px;border-radius:12px;
-      border:1px solid var(--border);background:#07101d;
-      color:var(--text);font-size:.9rem;
+      width:100%;padding:12px 14px;border-radius:11px;
+      border:1px solid var(--border);background:var(--panel2);
+      color:var(--text);font-size:.9rem;font-family:inherit;outline:none;
+      transition:border-color .2s;
     }
+    .modal select:focus{border-color:rgba(59,130,246,.45)}
     .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:22px}
 
     /* ── Toast ── */
     .toast{
       position:fixed;right:20px;bottom:24px;
-      background:rgba(13,23,36,.96);color:#fff;
+      background:rgba(10,22,40,.96);color:#fff;
       padding:12px 18px;border-radius:14px;
       box-shadow:0 8px 32px rgba(0,0,0,.4);
-      display:none;z-index:10000;font-size:.88rem;
+      display:none;z-index:10000;font-size:.875rem;
       border:1px solid var(--border);
+      animation:fadeInUp .25s ease both;
     }
 
     @media(max-width:900px){
@@ -158,20 +212,16 @@
     }
     @media(max-width:540px){
       .stats-row{grid-template-columns:1fr 1fr}
-      .topbar h1{font-size:.95rem}
     }
   </style>
 </head>
 <body>
 
-  <!-- Topbar -->
-  <div class="topbar">
-    <div class="topbar-left">
-      <div class="logo">🚨</div>
-      <div>
-        <h1>Urgence+ — Dispatch</h1>
-        <p>Tableau de bord superviseur · Temps réel</p>
-      </div>
+  <!-- Sub-header (sidebar provides main nav) -->
+  <div class="subheader">
+    <div>
+      <h1>Dispatch</h1>
+      <p>Tableau de bord superviseur · Temps réel</p>
     </div>
     <div class="live-badge">
       <div class="live-dot"></div>
@@ -214,10 +264,10 @@
         </div>
         <div class="filters">
           <button class="filter-button active" data-filter="all">Tous</button>
-          <button class="filter-button" data-filter="incendie">🔥 Incendies</button>
-          <button class="filter-button" data-filter="medical">🏥 Médicaux</button>
-          <button class="filter-button" data-filter="accident">🚗 Accidents</button>
-          <button class="filter-button" data-filter="vehicule">🚑 Véhicules</button>
+          <button class="filter-button" data-filter="incendie">Incendies</button>
+          <button class="filter-button" data-filter="medical">Médicaux</button>
+          <button class="filter-button" data-filter="accident">Accidents</button>
+          <button class="filter-button" data-filter="vehicule">Véhicules</button>
         </div>
       </div>
       <div id="map"></div>
@@ -251,7 +301,7 @@
   </div>
 
   <!-- Modal assignation -->
-  <div id="assignModal">
+  <div id="assignModal" style="display:none">
     <div class="modal">
       <h4>Assigner un véhicule — Intervention #<span id="modalInterventionId"></span></h4>
       <label for="vehSelect">Véhicule disponible</label>
@@ -268,9 +318,7 @@
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/js/dispatch.js"></script>
-  <!-- dispatch.html, dashboard.html, rapports.html -->
   <script src="/js/sidebar.js"></script>
-  <script src="/js/dispatch.js"></script>  <!-- ton script existant -->
+  <script src="/js/dispatch.js"></script>
 </body>
 </html>
